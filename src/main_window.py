@@ -74,6 +74,7 @@ class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
 
+        self.init = 1
         self.title("Super Apka")
         self.geometry("1600x900")
 
@@ -114,17 +115,16 @@ class App(customtkinter.CTk):
             self.widgets = json.load(fp)
         print(self.widgets)
 
-        self.tst_lst = []
+        self.tst_lst = {}
         for i, name in enumerate(self.widgets):
-            print(self.widgets[name]["int"])
             if self.widgets[name]["int"] == 1:
-                self.tst_lst.append(tkinter.IntVar())
+                self.tst_lst[name] = tkinter.IntVar()
             else:
-                self.tst_lst.append(tkinter.DoubleVar())
+                self.tst_lst[name] = tkinter.DoubleVar()
 
         print(self.tst_lst)
         with open("data.json", "w") as fp:
-            json.dump(self.widgets, fp, sort_keys=True, indent=4)
+            json.dump(self.widgets, fp, indent=4)
 
         self.tabview = customtkinter.CTkTabview(self.navigation_frame)
         self.tabview.grid(
@@ -144,48 +144,61 @@ class App(customtkinter.CTk):
             self.tabview.add(name)
         self.tabview.set(self.tab_name_lst[1])
 
+        self.labels = {}
+        self.sliders = {}
+        self.entries = {}
+
         for i, name in enumerate(self.widgets):
-            self.label = customtkinter.CTkLabel(
-                master=self.tabview.tab(self.tab_name_lst[self.widgets[name]["tab"]]),
-                text=name,
-            )
-            self.label.grid(
-                row=labelStyle.row + i * 2,
-                column=labelStyle.column,
-                padx=labelStyle.padx,
-                pady=labelStyle.pady,
-                sticky=labelStyle.sticky,
-                columnspan=2,
-            )
+            if self.widgets[name]["type"] == "slider":
+                self.labels[name] = customtkinter.CTkLabel(
+                    master=self.tabview.tab(
+                        self.tab_name_lst[self.widgets[name]["tab"]]
+                    ),
+                    text=name,
+                )
 
-            self.sliderpack = customtkinter.CTkSlider(
-                master=self.tabview.tab(self.tab_name_lst[self.widgets[name]["tab"]]),
-                from_=self.widgets[name]["min"],
-                to=self.widgets[name]["max"],
-                number_of_steps=self.widgets[name]["step"],
-                command=self.refresh_image,
-                variable=self.tst_lst[i],
-            )
+                self.labels[name].grid(
+                    row=labelStyle.row + i * 2,
+                    column=labelStyle.column,
+                    padx=labelStyle.padx,
+                    pady=labelStyle.pady,
+                    sticky=labelStyle.sticky,
+                    columnspan=2,
+                )
 
-            self.sliderpack.grid(
-                row=sliderStyle.row + 1 + i * 2, column=sliderStyle.column
-            )
+                self.sliders[name] = customtkinter.CTkSlider(
+                    master=self.tabview.tab(
+                        self.tab_name_lst[self.widgets[name]["tab"]]
+                    ),
+                    from_=self.widgets[name]["min"],
+                    to=self.widgets[name]["max"],
+                    number_of_steps=self.widgets[name]["step"],
+                    command=self.refresh_image,
+                    variable=self.tst_lst[name],
+                )
 
-            self.entry = customtkinter.CTkEntry(
-                master=self.tabview.tab(self.tab_name_lst[self.widgets[name]["tab"]]),
-                placeholder_text="CTkEntry",
-                textvariable=self.tst_lst[i],
-                width=entryStyle.width,
-                height=entryStyle.height,
-            )
-            # self.entry.bind("<Return>", command=self.get_text)
+                self.sliders[name].grid(
+                    row=sliderStyle.row + 1 + i * 2, column=sliderStyle.column
+                )
 
-            self.entry.grid(
-                row=sliderStyle.row + 1 + i * 2,
-                column=sliderStyle.column + 1,
-                padx=entryStyle.padx,
-                pady=entryStyle.pady,
-            )
+                self.entries[name] = customtkinter.CTkEntry(
+                    master=self.tabview.tab(
+                        self.tab_name_lst[self.widgets[name]["tab"]]
+                    ),
+                    placeholder_text="CTkEntry",
+                    textvariable=self.tst_lst[name],
+                    width=entryStyle.width,
+                    height=entryStyle.height,
+                )
+
+                # self.entry.bind("<Return>", command=self.get_text)
+
+                self.entries[name].grid(
+                    row=sliderStyle.row + 1 + i * 2,
+                    column=sliderStyle.column + 1,
+                    padx=entryStyle.padx,
+                    pady=entryStyle.pady,
+                )
 
         self.image_path = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
@@ -203,17 +216,41 @@ class App(customtkinter.CTk):
         self.CVapp.load_config()
         # CVapp.main()
 
+    def initial_values(self):
+        self.init = 0
+        for i, name in enumerate(self.widgets):
+            if self.widgets[name]["type"] == "slider":
+                self.tst_lst[name].set(self.widgets[name]["value"])
+        print("eeee")
+
+    def save_params(self):
+        for i, name in enumerate(self.widgets):
+            if self.widgets[name]["type"] == "slider":
+                print(f"{self.sliders[name].get()=}")
+                print(f"{self.tst_lst[name].get()=}")
+                self.widgets[name]["value"] = self.tst_lst[name].get()
+        # self.widgets["bottom_boundary"]["value"] = int(self.sliders[1].get())
+        # self.widgets["top_boundary"]["value"] = int(self.sliders[0].get())
+
     def update_params(self):
-        self.CVapp.top_boundary = self.widgets["top_boundary"]["value"]
+        # self.CVapp.top_boundary = self.widgets["top_boundary"]["value"]
+        self.CVapp.data_json = self.widgets
+        # self.CVapp.bottom_boundary = self.widgets["bottom_boundary"]["value"]
+        print("EEEEEEEEEEEEE", self.widgets)
+        # self.CVapp.top_boundary = 120
 
     def refresh_image(self, val):
+        if self.init == 1:
+            self.initial_values()
+        print(self.tst_lst)
         self.img = cv2.imread(
             "C:/Users/adamk/Projects/cone_detection/img/fluent/Results/e6_fluent_animation39.png"
         )
         self.update_params()
-        _, colour_image, _ = self.CVapp.calculate_lines(self.img)
-        colour_image = cv2.cvtColor(colour_image, cv2.COLOR_BGR2RGB)
-        im = Image.fromarray(colour_image, mode="RGB")
+        self.save_params()
+        _, color_image, _ = self.CVapp.calculate_lines(self.img)
+        color_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB)
+        im = Image.fromarray(color_image, mode="RGB")
         imgtk = ImageTk.PhotoImage(image=im)
         self.img_label.configure(image=imgtk)
 
