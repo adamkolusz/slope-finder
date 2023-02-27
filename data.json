@@ -120,7 +120,7 @@
         "int": 1,
         "max": 1200,
         "min": 0,
-        "step": 10,
+        "step": 1200,
         "tab": 2,
         "value": 619,
         "type": "slider"

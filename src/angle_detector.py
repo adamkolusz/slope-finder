@@ -822,9 +822,9 @@ class AngleDetector:
             #             continue
 
     def main(self):
-        cv2.namedWindow("self.trackbar_window_name", cv2.WINDOW_GUI_EXPANDED)
-        cv2.resizeWindow("self.trackbar_window_name", 600, 1280)
-        cv2.namedWindow("self.image_window_name", cv2.WINDOW_AUTOSIZE)
+        cv2.namedWindow(self.trackbar_window_name, cv2.WINDOW_GUI_EXPANDED)
+        cv2.resizeWindow(self.trackbar_window_name, 600, 1280)
+        cv2.namedWindow(self.image_window_name, cv2.WINDOW_AUTOSIZE)
 
         # new_path = input("Path:/n")
         new_path = "img/Ex1.png"

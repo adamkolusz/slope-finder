@@ -75,7 +75,7 @@ class App(customtkinter.CTk):
         super().__init__()
 
         self.init = 1
-        self.title("Super Apka")
+        self.title("Slope Finder")
         self.geometry("1600x900")
 
         # set grid layout 1x2
@@ -202,11 +202,11 @@ class App(customtkinter.CTk):
 
         self.image_path = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
-            "C:/Users/adamk/Projects/cone_detection/img/fluent/Results",
+            "C:/Users/adamk/Projects/slope-finder/img/piv/",
         )
 
         self.logo_image = customtkinter.CTkImage(
-            Image.open(os.path.join(self.image_path, "e6_fluent_animation0.png")),
+            Image.open(os.path.join(self.image_path, "piv6.png")),
             size=(100, 100),
         )
 
@@ -243,9 +243,7 @@ class App(customtkinter.CTk):
         if self.init == 1:
             self.initial_values()
         print(self.tst_lst)
-        self.img = cv2.imread(
-            "C:/Users/adamk/Projects/cone_detection/img/fluent/Results/e6_fluent_animation39.png"
-        )
+        self.img = cv2.imread("C:/Users/adamk/Projects/slope-finder/img/piv/piv6.png")
         self.update_params()
         self.save_params()
         _, color_image, _ = self.CVapp.calculate_lines(self.img)
