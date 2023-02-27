@@ -1,0 +1,12 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+/.venvPIV/
+/build/
+/data/
+/dist/
+/Figures/
+/img/
+/resources/
+/test/
+/vids/
