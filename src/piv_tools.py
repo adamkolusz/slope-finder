@@ -26,10 +26,10 @@ frame_b = np.array(frame_b)
 frame_a = normalize_intensity(frame_a)
 frame_b = normalize_intensity(frame_b)
 
-window_size = 24
-overlap = 12
+window_size = 32
+overlap = 16
 dt = 1.0
-search_area_size = 24
+search_area_size = 32
 correlation_method = "linear"
 subpixel_method = "gaussian"
 sig2noise_method = "peak2peak"
@@ -81,7 +81,7 @@ u2, v2 = pivfilters.replace_outliers(
     v0,
     invalid_mask,
     method="localmean",
-    max_iter=3,
+    max_iter=1,
     kernel_size=3,
 )
 
@@ -105,11 +105,12 @@ vorticity = v3 / x + u3 / y
 print(f"{np.shape(u3)=}")
 print(f"{np.shape(v3)=}")
 
-# plt.figure(figsize=(20, 20))
+plt.figure(figsize=(20, 20))
 # cp = plt.contourf(u3, v3, vorticity)
-# # cb = plt.colorbar(cp)
-# # plt.quiver(u3, v3, vorticity, scale=50, alpha=0.5, cmap="winter_r")
-# plt.show()
+# cb = plt.colorbar(cp)
+# plt.quiver(u3, v3, scale=50, alpha=0.5, cmap="winter_r")
+plt.scatter(u3[0], u3[1])
+plt.show()
 
 
 # Vectors with quiverplt.imshow(phi, extent=(0,10,0,10), interpolation='none', origin='lower')plt.quiver(x, y, np.gradient(phi)[0], np.gradient(phi)[1])

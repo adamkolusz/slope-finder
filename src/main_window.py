@@ -111,7 +111,7 @@ class App(customtkinter.CTk):
 
         self.widgets = {}
 
-        with open("data.json", "r") as fp:
+        with open("config/data.json", "r") as fp:
             self.widgets = json.load(fp)
         print(self.widgets)
 
@@ -123,7 +123,7 @@ class App(customtkinter.CTk):
                 self.tst_lst[name] = tkinter.DoubleVar()
 
         print(self.tst_lst)
-        with open("data.json", "w") as fp:
+        with open("config/data.json", "w") as fp:
             json.dump(self.widgets, fp, indent=4)
 
         self.tabview = customtkinter.CTkTabview(self.navigation_frame)

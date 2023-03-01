@@ -56,7 +56,7 @@ class AngleDetector:
         # self.current_frame = self.load_image(self.path)
 
     def load_config(self):
-        with open("data.json", "r") as f:
+        with open("config/data.json", "r") as f:
             data_json = json.load(f)
         return data_json
 
