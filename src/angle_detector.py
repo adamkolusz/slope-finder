@@ -47,12 +47,14 @@ class AngleDetector:
         self.hsv_value_bottom = self.data_json["hsv_value_bottom"]["value"]
         self.hsv_value_top = self.data_json["hsv_value_top"]["value"]
         self.current_frame = np.array([])
+        self.current_frame_edge = np.array([])
         self.save_state = 0
         self.enable_cropping = 0
         self.max_thresh = 379
         self.draw_windows = 0
         self.thresh = 50
         self.path = "C:/Users/adamk/Projects/cone_detection/img/fluent/Results"
+        self.mode = 0
         # self.current_frame = self.load_image(self.path)
 
     def load_config(self):
@@ -634,6 +636,7 @@ class AngleDetector:
         self.hsv_saturation_top = self.data_json["hsv_saturation_top"]["value"]
         self.hsv_value_bottom = self.data_json["hsv_value_bottom"]["value"]
         self.hsv_value_top = self.data_json["hsv_value_top"]["value"]
+        self.mode = self.data_json["mode"]["value"]
 
         prev_frame = np.copy(input_image)
 
@@ -646,7 +649,7 @@ class AngleDetector:
         # cv2.imwrite("temp.png", input_image)
         # global current_frame
         # global current_frameq
-        # colour_image = filter_hsv(current_frame)
+        colour_image = self.filter_hsv(colour_image)
         # colour_image = current_frame
         # colour_image = input_image[:]
         edge_image = self.filter_edges_on_image(colour_image)
@@ -690,6 +693,13 @@ class AngleDetector:
             resized_edge_image = self.resize_image(edge_image3)
             resized_colour_image = self.resize_image(colour_image3)
 
+        self.current_frame = resized_colour_image
+        self.current_frame_edge = resized_edge_image
+
+        if self.mode == 0:
+            self.current_frame = resized_colour_image
+        else:
+            self.current_frame = resized_edge_image
         # cv2.imshow("3", resized_colour_image)
 
         # select_from_images_and_draw(ww, ww, current_image_mode)

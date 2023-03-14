@@ -1,5 +1,6 @@
 import tkinter
 import customtkinter
+from tkinter.messagebox import showinfo
 import os
 from PIL import Image, ImageTk
 import angle_detector
@@ -70,6 +71,34 @@ class GridSettings:
         self.image_path = ""
 
 
+# class MyFrame(customtkinter.CTkScrollableFrame):
+#     def __init__(self, master, **kwargs):
+#         super().__init__(master, **kwargs)
+
+#         # add widgets onto the frame...
+#         self.label = customtkinter.CTkLabel(self)
+#         self.label.grid(row=0, column=0, padx=20)
+
+
+class ResizingCanvas(customtkinter.CTkCanvas):
+    def __init__(self, parent, **kwargs):
+        customtkinter.CTkCanvas.__init__(self, parent, **kwargs)
+        self.bind("<Configure>", self.on_resize)
+        self.height = self.winfo_reqheight()
+        self.width = self.winfo_reqwidth()
+
+    def on_resize(self, event):
+        # determine the ratio of old width/height to new width/height
+        wscale = float(event.width) / self.width
+        hscale = float(event.height) / self.height
+        self.width = event.width
+        self.height = event.height
+        # resize the canvas
+        self.config(width=self.width, height=self.height)
+        # rescale all the objects tagged with the "all" tag
+        self.scale("all", 0, 0, wscale, hscale)
+
+
 class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
@@ -88,7 +117,7 @@ class App(customtkinter.CTk):
         labelStyle = GridSettings(0, 0, 0, 0, None, 50, 25, 0, 0, 0, 0, "nsew")
         sliderStyle = GridSettings(0, 0, 0, 0, None, 50, 25, 0, 0, 0, 00, "nsw")
         entryStyle = GridSettings(0, 0, 0, 0, None, 50, 25, 0, 0, 0, 0, "nsw")
-
+        buttonStyle = GridSettings(0, 0, 0, 0, None, 50, 25, 0, 0, 0, 0, "nsw")
         # LAYOUT
         self.navigation_frame = customtkinter.CTkFrame(self, corner_radius=0)
         self.navigation_frame.grid(
@@ -99,14 +128,16 @@ class App(customtkinter.CTk):
             sticky=frameStyle.sticky,
         )
 
-        self.navigation_frame.grid_rowconfigure(0, weight=1)
-        self.navigation_frame.grid_columnconfigure(0, weight=1)
+        # self.navigation_frame.grid_rowconfigure(0, weight=1)
+        # self.navigation_frame.grid_columnconfigure(0, weight=1)
 
         self.home_frame = customtkinter.CTkFrame(self, corner_radius=0)
-        self.home_frame.grid(row=0, column=1)
+        # self.home_frame.grid(row=0, column=1, sticky="nw")
 
-        self.home_frame.grid_rowconfigure(0, weight=1)
-        self.home_frame.grid_columnconfigure(0, weight=1)
+        # self.home_frame.grid_rowconfigure(0, weight=1)
+        # self.home_frame.grid_columnconfigure(0, weight=1)
+        self.navigation_frame.pack(side="left", fill="both", expand=False)
+        self.home_frame.pack(side="left", fill="both", expand=True)
         self.tab_name_lst = ["Options", "Filter", "Position"]
 
         self.widgets = {}
@@ -126,7 +157,12 @@ class App(customtkinter.CTk):
         with open("config/data.json", "w") as fp:
             json.dump(self.widgets, fp, indent=4)
 
-        self.tabview = customtkinter.CTkTabview(self.navigation_frame)
+        self.scrollable_frame = customtkinter.CTkScrollableFrame(
+            master=self.navigation_frame, width=300, height=200
+        )
+        # self.scrollable_frame.grid(row=0, column=0, sticky="nsew")
+        self.scrollable_frame.pack(side="left", fill="both", expand=True)
+        self.tabview = customtkinter.CTkTabview(self.scrollable_frame)
         self.tabview.grid(
             row=tabStyle.row,
             column=tabStyle.column,
@@ -142,11 +178,15 @@ class App(customtkinter.CTk):
         # self.tabview.grid_columnconfigure(1, weight=1)
         for name in self.tab_name_lst:
             self.tabview.add(name)
+
         self.tabview.set(self.tab_name_lst[1])
 
         self.labels = {}
         self.sliders = {}
         self.entries = {}
+        self.buttons = {}
+
+        self.file_path = "/"
 
         for i, name in enumerate(self.widgets):
             if self.widgets[name]["type"] == "slider":
@@ -199,19 +239,54 @@ class App(customtkinter.CTk):
                     padx=entryStyle.padx,
                     pady=entryStyle.pady,
                 )
+            elif self.widgets[name]["type"] == "button":
+                self.buttons[name] = customtkinter.CTkButton(
+                    master=self.tabview.tab(
+                        self.tab_name_lst[self.widgets[name]["tab"]]
+                    ),
+                    text=name,
+                    command=self.select_file,
+                )
+                # Union[Callable[[], None], None]
+                self.buttons[name].grid(
+                    row=buttonStyle.row + i * 2,
+                    column=buttonStyle.column,
+                    padx=buttonStyle.padx,
+                    pady=buttonStyle.pady,
+                    sticky=buttonStyle.sticky,
+                    columnspan=2,
+                )
 
         self.image_path = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
             "C:/Users/adamk/Projects/slope-finder/img/piv/",
         )
 
+        # image = (Image.open(filename))
+        self.im = ImageTk.PhotoImage(
+            Image.open(os.path.join(self.image_path, "piv6.png"))
+        )
         self.logo_image = customtkinter.CTkImage(
             Image.open(os.path.join(self.image_path, "piv6.png")),
             size=(100, 100),
         )
 
-        self.img_label = customtkinter.CTkLabel(self.home_frame, image=self.logo_image)
-        self.img_label.grid(row=0, column=1, padx=20, pady=10)
+        self.mycanvas = ResizingCanvas(
+            self.home_frame, width=850, height=400, bg="red", highlightthickness=0
+        )
+        self.mycanvas.pack(fill="both", expand=True)
+
+        # self.canvas = customtkinter.CTkCanvas(self.home_frame, width=800, height=400)
+        # # self.canvas.grid(row=0, column=1, padx=0, pady=0, sticky="nsew")
+        # self.canvas.pack(fill="both", expand=True)
+        # self.image_id = self.canvas.create_image(0, 0, image=self.im, anchor="nw")
+
+        # self.img_label = customtkinter.CTkLabel(self.home_frame, image=self.logo_image)
+        # # self.img_label.grid(row=0, column=1, padx=20, pady=10)
+        # self.canvas.pack(fill="both", expand=True)
+
+        # self.canvas.bind("<Configure>", self.resizer)
+
         self.CVapp = angle_detector.AngleDetector()
         self.CVapp.load_config()
         # CVapp.main()
@@ -239,18 +314,58 @@ class App(customtkinter.CTk):
         print("EEEEEEEEEEEEE", self.widgets)
         # self.CVapp.top_boundary = 120
 
+    def select_file(self):
+        filetypes = (("png", "*.png"), ("tiff", "*.tiff"), ("All files", "*.*"))
+
+        self.file_path = tkinter.filedialog.askopenfilename(
+            title="Open a file", initialdir="./img", filetypes=filetypes
+        )
+
+        showinfo(title="Selected File", message=self.file_path)
+
+        self.title(f"Slope Finder 2 ({self.file_path})")
+
     def refresh_image(self, val):
         if self.init == 1:
             self.initial_values()
         print(self.tst_lst)
-        self.img = cv2.imread("C:/Users/adamk/Projects/slope-finder/img/piv/piv6.png")
+        self.img = cv2.imread(self.file_path)
         self.update_params()
         self.save_params()
         _, color_image, _ = self.CVapp.calculate_lines(self.img)
-        color_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB)
+        color_image = cv2.cvtColor(self.CVapp.current_frame, cv2.COLOR_BGR2RGB)
+        # edge_image = cv2.cvtColor(self.CVapp.current_frame_edge, cv2.COLOR_BGR2RGB)
         im = Image.fromarray(color_image, mode="RGB")
+        im.resize(
+            (self.mycanvas.cget("width"), self.mycanvas.cget("height")),
+            Image.Resampling.LANCZOS,
+        )
+        widd = self.mycanvas.cget("width")
+        print(f"{widd=}")
         imgtk = ImageTk.PhotoImage(image=im)
-        self.img_label.configure(image=imgtk)
+        self.mycanvas.configure(image=imgtk)
+
+        # self.canvas.itemconfigure(self.image_id, image=imgtk)
+
+    def resizer(self, event):
+        w, h = event.width - 100, event.height - 100
+        self.canvas.config(width=w, height=h)
+        # color_image = cv2.cvtColor(self.CVapp.current_frame, cv2.COLOR_BGR2RGB)
+        # im = Image.fromarray(color_image, mode="RGB")
+        # # image1 = Image.open(self.file_path)
+        # resized_image = im.resize((e.width, e.height), Image.Resampling.LANCZOS)
+        # new_image = ImageTk.PhotoImage(resized_image)
+        # self.canvas.itemconfigure(self.image_id, image=new_image)
+
+    # def resize_image(e):
+    #     color_image = cv2.cvtColor(self.CVapp.current_frame, cv2.COLOR_BGR2RGB)
+    #     # edge_image = cv2.cvtColor(self.CVapp.current_frame_edge, cv2.COLOR_BGR2RGB)
+    #     im = Image.fromarray(color_image, mode="RGB")
+    #     # resize the image with width and height of root
+    #     resized = self.current_frame.resize((e.width, e.height), Image.ANTIALIAS)
+
+    #     image2 = ImageTk.PhotoImage(resized)
+    #     self.canvas.create_image(0, 0, image=image2, anchor="nw")
 
     # def get_text(self, event):
     #     # self.sliderpack.set(int(self.v.get()))

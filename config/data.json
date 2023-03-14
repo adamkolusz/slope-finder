@@ -41,7 +41,7 @@
         "min": 0,
         "step": 255,
         "tab": 1,
-        "value": 87,
+        "value": 130,
         "type": "slider"
     },
     "hsv_saturation_bottom": {
@@ -82,9 +82,9 @@
     },
     "kernel_size": {
         "int": 1,
-        "max": 17,
+        "max": 21,
         "min": 0,
-        "step": 18,
+        "step": 7,
         "tab": 1,
         "value": 9,
         "type": "slider"
@@ -214,5 +214,23 @@
         "tab": 0,
         "value": "trackbar_window",
         "type": "str"
+    },
+    "mode": {
+        "int": 1,
+        "max": 3,
+        "min": 0,
+        "step": 3,
+        "tab": 0,
+        "value": "0",
+        "type": "slider"
+    },
+    "open_file": {
+        "int": 0,
+        "max": 0,
+        "min": 0,
+        "step": 0,
+        "tab": 0,
+        "value": "0",
+        "type": "button"
     }
 }
