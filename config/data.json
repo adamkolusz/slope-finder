@@ -1,5 +1,6 @@
 {
     "bottom_boundary": {
+        "text": "bottom_boundary",
         "int": 1,
         "max": 1000,
         "min": 0,
@@ -9,6 +10,7 @@
         "type": "slider"
     },
     "current_image_mode": {
+        "text": "current_image_mode",
         "int": 1,
         "max": 3,
         "min": 0,
@@ -18,6 +20,7 @@
         "type": "slider"
     },
     "high_threshold": {
+        "text": "high_threshold",
         "int": 1,
         "max": 500,
         "min": 0,
@@ -27,6 +30,7 @@
         "type": "slider"
     },
     "hsv_hue_bottom": {
+        "text": "hsv_hue_bottom",
         "int": 1,
         "max": 255,
         "min": 0,
@@ -36,6 +40,7 @@
         "type": "slider"
     },
     "hsv_hue_top": {
+        "text": "hsv_hue_top",
         "int": 1,
         "max": 255,
         "min": 0,
@@ -45,6 +50,7 @@
         "type": "slider"
     },
     "hsv_saturation_bottom": {
+        "text": "hsv_saturation_bottom",
         "int": 1,
         "max": 255,
         "min": 0,
@@ -54,6 +60,7 @@
         "type": "slider"
     },
     "hsv_saturation_top": {
+        "text": "hsv_saturation_top",
         "int": 1,
         "max": 255,
         "min": 0,
@@ -63,6 +70,7 @@
         "type": "slider"
     },
     "hsv_value_bottom": {
+        "text": "hsv_value_bottom",
         "int": 1,
         "max": 255,
         "min": 0,
@@ -72,6 +80,7 @@
         "type": "slider"
     },
     "hsv_value_top": {
+        "text": "hsv_value_top",
         "int": 1,
         "max": 255,
         "min": 0,
@@ -81,6 +90,7 @@
         "type": "slider"
     },
     "kernel_size": {
+        "text": "kernel_size",
         "int": 1,
         "max": 21,
         "min": 0,
@@ -90,6 +100,7 @@
         "type": "slider"
     },
     "left_boundary": {
+        "text": "left_boundary",
         "int": 1,
         "max": 1200,
         "min": 0,
@@ -99,6 +110,7 @@
         "type": "slider"
     },
     "low_threshold": {
+        "text": "low_threshold",
         "int": 1,
         "max": 500,
         "min": 0,
@@ -108,6 +120,7 @@
         "type": "slider"
     },
     "max_line_gap": {
+        "text": "max_line_gap",
         "int": 1,
         "max": 500,
         "min": 0,
@@ -117,6 +130,7 @@
         "type": "slider"
     },
     "middle_line_position": {
+        "text": "middle_line_position",
         "int": 1,
         "max": 1200,
         "min": 0,
@@ -126,6 +140,7 @@
         "type": "slider"
     },
     "min_line_length": {
+        "text": "min_line_length",
         "int": 1,
         "max": 500,
         "min": 0,
@@ -135,6 +150,7 @@
         "type": "slider"
     },
     "rho": {
+        "text": "rho",
         "int": 1,
         "max": 500,
         "min": 0,
@@ -144,6 +160,7 @@
         "type": "slider"
     },
     "right_boundary": {
+        "text": "right_boundary",
         "int": 1,
         "max": 1200,
         "min": 0,
@@ -153,6 +170,7 @@
         "type": "slider"
     },
     "scale_percent": {
+        "text": "scale_percent",
         "int": 1,
         "max": 500,
         "min": 0,
@@ -162,6 +180,7 @@
         "type": "slider"
     },
     "theta": {
+        "text": "theta",
         "int": 0,
         "max": 1,
         "min": 0,
@@ -171,6 +190,7 @@
         "type": "slider"
     },
     "threshold": {
+        "text": "threshold",
         "int": 1,
         "max": 500,
         "min": 0,
@@ -180,6 +200,7 @@
         "type": "slider"
     },
     "top_boundary": {
+        "text": "top_boundary",
         "int": 1,
         "max": 1000,
         "min": 0,
@@ -189,6 +210,7 @@
         "type": "slider"
     },
     "line_visibility": {
+        "text": "line_visibility",
         "int": 1,
         "max": 2,
         "min": 0,
@@ -198,6 +220,7 @@
         "type": "slider"
     },
     "image_window_name": {
+        "text": "image_window_name",
         "int": 0,
         "max": 500,
         "min": 0,
@@ -207,6 +230,7 @@
         "type": "str"
     },
     "trackbar_window_name": {
+        "text": "trackbar_window_name",
         "int": 0,
         "max": 500,
         "min": 0,
@@ -216,6 +240,7 @@
         "type": "str"
     },
     "mode": {
+        "text": "Mode",
         "int": 1,
         "max": 3,
         "min": 0,
@@ -225,11 +250,52 @@
         "type": "slider"
     },
     "open_file": {
+        "text": "open_file",
         "int": 0,
         "max": 0,
         "min": 0,
         "step": 0,
         "tab": 0,
+        "value": "0",
+        "type": "button"
+    },
+    "prev": {
+        "int": 0,
+        "text": "\u23ea\ufe0e",
+        "max": 0,
+        "min": 0,
+        "step": 0,
+        "tab": 10,
+        "value": "0",
+        "type": "button"
+    },
+    "play_button": {
+        "text": "\u23ef\ufe0e",
+        "int": 0,
+        "max": 0,
+        "min": 0,
+        "step": 0,
+        "tab": 10,
+        "value": "0",
+        "type": "button"
+    },
+    "next_button": {
+        "text": "\u23e9\ufe0e",
+        "int": 0,
+        "max": 0,
+        "min": 0,
+        "step": 0,
+        "tab": 10,
+        "value": "0",
+        "type": "button"
+    },
+    "refresh_button": {
+        "text": "\u21ba",
+        "int": 0,
+        "max": 0,
+        "min": 0,
+        "step": 0,
+        "tab": 10,
         "value": "0",
         "type": "button"
     }

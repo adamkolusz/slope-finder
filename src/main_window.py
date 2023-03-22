@@ -6,6 +6,7 @@ from PIL import Image, ImageTk
 import angle_detector
 import cv2
 import json
+import numpy as np
 
 
 class WidgetSettings:
@@ -102,7 +103,6 @@ class ResizingCanvas(customtkinter.CTkCanvas):
 class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
-
         self.init = 1
         self.title("Slope Finder")
         self.geometry("1600x900")
@@ -118,6 +118,8 @@ class App(customtkinter.CTk):
         sliderStyle = GridSettings(0, 0, 0, 0, None, 50, 25, 0, 0, 0, 00, "nsw")
         entryStyle = GridSettings(0, 0, 0, 0, None, 50, 25, 0, 0, 0, 0, "nsw")
         buttonStyle = GridSettings(0, 0, 0, 0, None, 50, 25, 0, 0, 0, 0, "nsw")
+        actionButtonStyle = GridSettings(0, 0, 0, 0, None, 25, 25, 0, 0, 0, 0, "nsw")
+
         # LAYOUT
         self.navigation_frame = customtkinter.CTkFrame(self, corner_radius=0)
         self.navigation_frame.grid(
@@ -132,19 +134,25 @@ class App(customtkinter.CTk):
         # self.navigation_frame.grid_columnconfigure(0, weight=1)
 
         self.home_frame = customtkinter.CTkFrame(self, corner_radius=0)
+        self.button_frame = customtkinter.CTkFrame(
+            self.navigation_frame, corner_radius=0, height=120
+        )
         # self.home_frame.grid(row=0, column=1, sticky="nw")
 
         # self.home_frame.grid_rowconfigure(0, weight=1)
         # self.home_frame.grid_columnconfigure(0, weight=1)
         self.navigation_frame.pack(side="left", fill="both", expand=False)
         self.home_frame.pack(side="left", fill="both", expand=True)
+        self.button_frame.pack(side="bottom", fill="y", expand=False)
         self.tab_name_lst = ["Options", "Filter", "Position"]
-
+        self.video_mode = False
+        self.frame_1 = np.array([])
+        self.frame_2 = np.array([])
         self.widgets = {}
 
-        with open("config/data.json", "r") as fp:
+        with open("config/data.json", "r", encoding="UTF8") as fp:
             self.widgets = json.load(fp)
-        print(self.widgets)
+        # print(self.widgets)
 
         self.tst_lst = {}
         for i, name in enumerate(self.widgets):
@@ -153,7 +161,7 @@ class App(customtkinter.CTk):
             else:
                 self.tst_lst[name] = tkinter.DoubleVar()
 
-        print(self.tst_lst)
+        # print(self.tst_lst)
         with open("config/data.json", "w") as fp:
             json.dump(self.widgets, fp, indent=4)
 
@@ -185,16 +193,24 @@ class App(customtkinter.CTk):
         self.sliders = {}
         self.entries = {}
         self.buttons = {}
+        self.action_buttons = {}
 
-        self.file_path = "/"
+        self.file_path = "./img/piv/piv2.png"
 
+        self.action_commands = [
+            self.next_frame,
+            self.process_video,
+            self.refresh_image,
+            self.refresh_image,
+        ]
+        action_ctr = 0
         for i, name in enumerate(self.widgets):
             if self.widgets[name]["type"] == "slider":
                 self.labels[name] = customtkinter.CTkLabel(
                     master=self.tabview.tab(
                         self.tab_name_lst[self.widgets[name]["tab"]]
                     ),
-                    text=name,
+                    text=self.widgets[name]["text"],
                 )
 
                 self.labels[name].grid(
@@ -239,7 +255,10 @@ class App(customtkinter.CTk):
                     padx=entryStyle.padx,
                     pady=entryStyle.pady,
                 )
-            elif self.widgets[name]["type"] == "button":
+            elif (
+                self.widgets[name]["type"] == "button"
+                and self.widgets[name]["tab"] != 10
+            ):
                 self.buttons[name] = customtkinter.CTkButton(
                     master=self.tabview.tab(
                         self.tab_name_lst[self.widgets[name]["tab"]]
@@ -254,8 +273,30 @@ class App(customtkinter.CTk):
                     padx=buttonStyle.padx,
                     pady=buttonStyle.pady,
                     sticky=buttonStyle.sticky,
-                    columnspan=2,
+                    columnspan=1,
                 )
+            elif (
+                self.widgets[name]["type"] == "button"
+                and self.widgets[name]["tab"] == 10
+            ):
+                self.action_buttons[name] = customtkinter.CTkButton(
+                    master=self.button_frame,
+                    text=str(self.widgets[name]["text"]),
+                    width=actionButtonStyle.width,
+                    height=actionButtonStyle.height,
+                    command=self.action_commands[action_ctr],
+                )
+                action_ctr += 1
+                # Union[Callable[[], None], None]
+                # self.action_buttons[name].grid(
+                #     row=actionButtonStyle.row,
+                #     column=actionButtonStyle.column,
+                #     padx=actionButtonStyle.padx,
+                #     pady=actionButtonStyle.pady,
+                #     sticky=actionButtonStyle.sticky,
+                #     columnspan=1,
+                # )
+                self.action_buttons[name].pack(side="left", fill="both", expand=True)
 
         self.image_path = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
@@ -272,20 +313,25 @@ class App(customtkinter.CTk):
         )
 
         self.mycanvas = ResizingCanvas(
-            self.home_frame, width=850, height=400, bg="red", highlightthickness=0
+            self.home_frame,
+            width=850,
+            height=400,
+            bg="#000000",
+            highlightthickness=2,
         )
         self.mycanvas.pack(fill="both", expand=True)
 
         # self.canvas = customtkinter.CTkCanvas(self.home_frame, width=800, height=400)
         # # self.canvas.grid(row=0, column=1, padx=0, pady=0, sticky="nsew")
         # self.canvas.pack(fill="both", expand=True)
-        # self.image_id = self.canvas.create_image(0, 0, image=self.im, anchor="nw")
+        self.image_id = self.mycanvas.create_image(0, 0, image=self.im, anchor="nw")
 
         # self.img_label = customtkinter.CTkLabel(self.home_frame, image=self.logo_image)
         # # self.img_label.grid(row=0, column=1, padx=20, pady=10)
         # self.canvas.pack(fill="both", expand=True)
 
         # self.canvas.bind("<Configure>", self.resizer)
+        # self.mycanvas.bind("<Configure>", self.refresh_image)
 
         self.CVapp = angle_detector.AngleDetector()
         self.CVapp.load_config()
@@ -296,13 +342,12 @@ class App(customtkinter.CTk):
         for i, name in enumerate(self.widgets):
             if self.widgets[name]["type"] == "slider":
                 self.tst_lst[name].set(self.widgets[name]["value"])
-        print("eeee")
 
     def save_params(self):
         for i, name in enumerate(self.widgets):
             if self.widgets[name]["type"] == "slider":
-                print(f"{self.sliders[name].get()=}")
-                print(f"{self.tst_lst[name].get()=}")
+                # print(f"{self.sliders[name].get()=}")
+                # print(f"{self.tst_lst[name].get()=}")
                 self.widgets[name]["value"] = self.tst_lst[name].get()
         # self.widgets["bottom_boundary"]["value"] = int(self.sliders[1].get())
         # self.widgets["top_boundary"]["value"] = int(self.sliders[0].get())
@@ -311,41 +356,107 @@ class App(customtkinter.CTk):
         # self.CVapp.top_boundary = self.widgets["top_boundary"]["value"]
         self.CVapp.data_json = self.widgets
         # self.CVapp.bottom_boundary = self.widgets["bottom_boundary"]["value"]
-        print("EEEEEEEEEEEEE", self.widgets)
+        # print("EEEEEEEEEEEEE", self.widgets)
         # self.CVapp.top_boundary = 120
 
+    def update_frames(self):
+        if self.video_mode:
+            cap = cv2.VideoCapture(self.file_path)
+            while cap.isOpened():
+                if True:  # cv2.waitKey(0) & 0xFF == ord('q'):
+                    ret, frame = cap.read()
+                    if not ret:
+                        break
+                    try:
+                        current_frame = frame
+                        angle_array, _, _ = self.calculate_lines(current_frame)
+                    except:
+                        print("Could not obtain line")
+                else:
+                    continue
+        else:
+            self.frame_1 = cv2.imread(self.file_path)
+
     def select_file(self):
-        filetypes = (("png", "*.png"), ("tiff", "*.tiff"), ("All files", "*.*"))
+        filetypes = (
+            ("png", "*.png"),
+            ("tiff", "*.tiff"),
+            ("mp4", "*.mp4"),
+            ("All files", "*.*"),
+        )
 
         self.file_path = tkinter.filedialog.askopenfilename(
             title="Open a file", initialdir="./img", filetypes=filetypes
         )
+        if self.file_path.endswith("mp4"):
+            self.video_mode = True
+        else:
+            self.video_mode = False
+        self.title(f"Slope Finder ({self.file_path})")
 
-        showinfo(title="Selected File", message=self.file_path)
+    def image_resize(self, image, width=None, height=None, inter=cv2.INTER_AREA):
+        dim = None
+        (h, w) = image.shape[:2]
 
-        self.title(f"Slope Finder 2 ({self.file_path})")
+        if width is None and height is None:
+            return image
 
-    def refresh_image(self, val):
+        if width is None:
+            r = height / float(h)
+            dim = (int(w * r), height)
+
+        else:
+            r = width / float(w)
+            dim = (width, int(h * r))
+
+        resized = cv2.resize(image, dim, interpolation=inter)
+        return resized
+
+    def refresh_image(self, val=0):
         if self.init == 1:
             self.initial_values()
-        print(self.tst_lst)
+        # self.update_frames()
+
+        # print(self.tst_lst)
         self.img = cv2.imread(self.file_path)
+
         self.update_params()
         self.save_params()
-        _, color_image, _ = self.CVapp.calculate_lines(self.img)
+        self.CVapp.calculate_lines(self.img)
         color_image = cv2.cvtColor(self.CVapp.current_frame, cv2.COLOR_BGR2RGB)
-        # edge_image = cv2.cvtColor(self.CVapp.current_frame_edge, cv2.COLOR_BGR2RGB)
-        im = Image.fromarray(color_image, mode="RGB")
-        im.resize(
-            (self.mycanvas.cget("width"), self.mycanvas.cget("height")),
-            Image.Resampling.LANCZOS,
-        )
         widd = self.mycanvas.cget("width")
-        print(f"{widd=}")
+        resized = self.image_resize(image=color_image, width=int(widd))
+        im = Image.fromarray(resized, mode="RGB")
         imgtk = ImageTk.PhotoImage(image=im)
-        self.mycanvas.configure(image=imgtk)
+        self.mycanvas.imgref = imgtk
+        test_id = self.mycanvas.itemconfig(self.image_id, image=imgtk)
 
-        # self.canvas.itemconfigure(self.image_id, image=imgtk)
+    def process_video(self):
+        if True:  # self.video_mode:
+            cap = cv2.VideoCapture(self.file_path)
+            while cap.isOpened():
+                if cv2.waitKey(33) & 0xFF == ord("q"):
+                    ret, frame = cap.read()
+                    if not ret:
+                        break
+                    try:
+                        self.frame_1 = frame
+                        self.refresh_image()
+                        # angle_array.append(np.mean(np.abs(angle_array)))
+                        # writer.writerow(angle_array)
+                        self.frame_2 = self.frame_1
+                    except:
+                        print("Could not obtain line")
+                else:
+                    continue
+        else:
+            self.frame_1 = cv2.imread(self.file_path)
+
+    def next_frame(self):
+        print("next")
+
+    def play_pause(self):
+        print("play")
 
     def resizer(self, event):
         w, h = event.width - 100, event.height - 100

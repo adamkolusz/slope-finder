@@ -17,7 +17,7 @@ class AngleDetector:
     def __init__(self):
         self.loaded = 0
         self.data_json = self.load_config()
-
+        self.first = True
         self.kernel_size = self.data_json["kernel_size"]["value"]
         self.low_threshold = self.data_json["low_threshold"]["value"]
         self.high_threshold = self.data_json["high_threshold"]["value"]
@@ -47,6 +47,8 @@ class AngleDetector:
         self.hsv_value_bottom = self.data_json["hsv_value_bottom"]["value"]
         self.hsv_value_top = self.data_json["hsv_value_top"]["value"]
         self.current_frame = np.array([])
+        self.next_frame = np.array([])
+        self.original_frame = np.array([])
         self.current_frame_edge = np.array([])
         self.save_state = 0
         self.enable_cropping = 0
@@ -607,7 +609,7 @@ class AngleDetector:
         # colour_image = load_image("temp.png")
         # global current_frame
         # cv2.imwrite("temp.png", current_frame)
-
+        self.first == True
         self.kernel_size = self.data_json["kernel_size"]["value"]
         self.low_threshold = self.data_json["low_threshold"]["value"]
         self.high_threshold = self.data_json["high_threshold"]["value"]
@@ -639,7 +641,7 @@ class AngleDetector:
         self.mode = self.data_json["mode"]["value"]
 
         prev_frame = np.copy(input_image)
-
+        self.original_frame = prev_frame
         # global current_frame
         self.current_frame = prev_frame
         # cv2.imshow("1", input_image)
@@ -711,7 +713,7 @@ class AngleDetector:
             )
         # global current_frame
         # current_frame = input_image
-        # cv2.imshow("colour_image3", colour_image3)
+        # cv2.imshow("resized_colour_image", resized_edge_image)
         return [left_angle, right_angle], colour_image3, prev_frame
 
     def save_to_csv(
@@ -781,14 +783,15 @@ class AngleDetector:
                     print("Could not obtain line")
             else:
                 continue
-        print(total_array)
-        print(f"len={len(total_array)}")
+        # print(total_array)
+        # print(f"len={len(total_array)}")
         self.save_to_csv(total_array, True)
         pass
 
     def repose_calculation_from_video(self, path):
         global current_frame
         dir = "data/"
+        angle_array_full = []
         mode = 0
         try:
             cap = cv2.VideoCapture(path)
@@ -803,14 +806,15 @@ class AngleDetector:
             )
             if True:  # mode == 0:
                 while cap.isOpened():
-                    if True:  # cv2.waitKey(0) & 0xFF == ord('q'):
+                    if True:  # cv2.waitKey(0) & 0xFF == ord("q"):
                         ret, frame = cap.read()
                         if not ret:
                             break
                         try:
                             current_frame = frame
-                            angle_array, _ = self.calculate_lines(current_frame)
-                            angle_array.append(np.mean(np.abs(angle_array)))
+                            angle_array, img, _ = self.calculate_lines(current_frame)
+                            # cv2.imshow(self.image_window_name, self.current_frame)
+                            angle_array_full.append(np.mean(np.abs(angle_array)))
                             writer.writerow(angle_array)
                         except:
                             print("Could not obtain line")
@@ -1006,7 +1010,9 @@ class AngleDetector:
         # current_frame = load_image(path)
         # while cv2.waitKey(0) & 0xFF == ord('q'):
         #     angle_array, img, _ = calculate_lines(current_frame)
-        self.repose_calculation_from_images(self.path)
+        # self.repose_calculation_from_images(self.path)
+        self.path = "./vids/16mar/jsc_f2_rapid.mp4"
+        self.repose_calculation_from_video(self.path)
         # generate_video_from_path(path + '/repose/', 'plate_precision_repose.avi', fps)
         # generate_video_from_path(path, 'plate_precision.avi', fps)
 
