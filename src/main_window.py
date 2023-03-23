@@ -117,7 +117,7 @@ class App(customtkinter.CTk):
         labelStyle = GridSettings(0, 0, 0, 0, None, 50, 25, 0, 0, 0, 0, "nsew")
         sliderStyle = GridSettings(0, 0, 0, 0, None, 50, 25, 0, 0, 0, 00, "nsw")
         entryStyle = GridSettings(0, 0, 0, 0, None, 50, 25, 0, 0, 0, 0, "nsw")
-        buttonStyle = GridSettings(0, 0, 0, 0, None, 50, 25, 0, 0, 0, 0, "nsw")
+        buttonStyle = GridSettings(0, 0, 2, 0, None, 50, 25, 5, 5, 5, 5, "ns")
         actionButtonStyle = GridSettings(0, 0, 0, 0, None, 25, 25, 0, 0, 0, 0, "nsw")
 
         # LAYOUT
@@ -263,7 +263,9 @@ class App(customtkinter.CTk):
                     master=self.tabview.tab(
                         self.tab_name_lst[self.widgets[name]["tab"]]
                     ),
-                    text=name,
+                    width=buttonStyle.width,
+                    height=buttonStyle.height,
+                    text=self.widgets[name]["text"],
                     command=self.select_file,
                 )
                 # Union[Callable[[], None], None]
@@ -273,7 +275,7 @@ class App(customtkinter.CTk):
                     padx=buttonStyle.padx,
                     pady=buttonStyle.pady,
                     sticky=buttonStyle.sticky,
-                    columnspan=1,
+                    columnspan=buttonStyle.columnspan,
                 )
             elif (
                 self.widgets[name]["type"] == "button"
