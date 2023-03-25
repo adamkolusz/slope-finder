@@ -7,6 +7,7 @@ import angle_detector
 import cv2
 import json
 import numpy as np
+import time
 
 
 class WidgetSettings:
@@ -145,7 +146,7 @@ class App(customtkinter.CTk):
         self.home_frame.pack(side="left", fill="both", expand=True)
         self.button_frame.pack(side="bottom", fill="y", expand=False)
         self.tab_name_lst = ["Options", "Filter", "Position"]
-        self.video_mode = False
+        self.video_mode = True
         self.frame_1 = np.array([])
         self.frame_2 = np.array([])
         self.widgets = {}
@@ -417,15 +418,18 @@ class App(customtkinter.CTk):
     def refresh_image(self, val=0):
         if self.init == 1:
             self.initial_values()
+            # self.init = 0
         # self.update_frames()
-
+        # self.video_mode = False
         # print(self.tst_lst)
+        # if not self.video_mode:
         self.img = cv2.imread(self.file_path)
 
         self.update_params()
-        self.save_params()
-        self.CVapp.calculate_lines(self.img)
-        color_image = cv2.cvtColor(self.CVapp.current_frame, cv2.COLOR_BGR2RGB)
+        # self.save_params()
+        _, display_img, _ = self.CVapp.calculate_lines(self.img)
+        cv2.imshow("display_img", display_img)
+        color_image = cv2.cvtColor(display_img, cv2.COLOR_BGR2RGB)
         widd = self.mycanvas.cget("width")
         resized = self.image_resize(image=color_image, width=int(widd))
         im = Image.fromarray(resized, mode="RGB")
@@ -435,20 +439,22 @@ class App(customtkinter.CTk):
 
     def process_video(self):
         if True:  # self.video_mode:
-            cap = cv2.VideoCapture(self.file_path)
+            # cap = cv2.VideoCapture(self.file_path)
+            cap = cv2.VideoCapture("./vids/avalanche_without_repose.avi")
             while cap.isOpened():
-                if cv2.waitKey(33) & 0xFF == ord("q"):
+                if True:  # cv2.waitKey(33) & 0xFF == ord("q"):
                     ret, frame = cap.read()
                     if not ret:
                         break
-                    try:
-                        self.frame_1 = frame
-                        self.refresh_image()
-                        # angle_array.append(np.mean(np.abs(angle_array)))
-                        # writer.writerow(angle_array)
-                        self.frame_2 = self.frame_1
-                    except:
-                        print("Could not obtain line")
+                    # try:
+                    self.CVapp.current_frame = frame
+                    self.refresh_image()
+                    # time.sleep(1)
+                    # angle_array.append(np.mean(np.abs(angle_array)))
+                    # writer.writerow(angle_array)
+                    self.frame_2 = frame
+                    # except:
+                    #     print("Could not obtain line")
                 else:
                     continue
         else:

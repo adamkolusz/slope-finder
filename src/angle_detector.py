@@ -609,36 +609,40 @@ class AngleDetector:
         # colour_image = load_image("temp.png")
         # global current_frame
         # cv2.imwrite("temp.png", current_frame)
-        self.first == True
-        self.kernel_size = self.data_json["kernel_size"]["value"]
-        self.low_threshold = self.data_json["low_threshold"]["value"]
-        self.high_threshold = self.data_json["high_threshold"]["value"]
-        self.rho = self.data_json["rho"]["value"]
-        self.theta = self.data_json["theta"]["value"]
-        # angular resolution in radians of the Hough grid
-        self.threshold = self.data_json["threshold"]["value"]
-        # minimum number of votes (intersections in Hough grid cell)
-        self.min_line_length = self.data_json["min_line_length"]["value"]
-        # minimum number of pixels making up a line
-        self.max_line_gap = self.data_json["max_line_gap"]["value"]
-        # maximum gap in pixels between connectable line segments
-        self.current_image_mode = self.data_json["current_image_mode"]["value"]
-        self.scale_percent = self.data_json["scale_percent"]["value"]
-        self.line_visibility = self.data_json["line_visibility"]["value"]
-        self.image_window_name = self.data_json["image_window_name"]["value"]
-        self.trackbar_window_name = self.data_json["trackbar_window_name"]["value"]
-        self.top_boundary = self.data_json["top_boundary"]["value"]
-        self.bottom_boundary = self.data_json["bottom_boundary"]["value"]
-        self.left_boundary = self.data_json["left_boundary"]["value"]
-        self.right_boundary = self.data_json["right_boundary"]["value"]
-        self.middle_line_position = self.data_json["middle_line_position"]["value"]
-        self.hsv_hue_bottom = self.data_json["hsv_hue_bottom"]["value"]
-        self.hsv_hue_top = self.data_json["hsv_hue_top"]["value"]
-        self.hsv_saturation_bottom = self.data_json["hsv_saturation_bottom"]["value"]
-        self.hsv_saturation_top = self.data_json["hsv_saturation_top"]["value"]
-        self.hsv_value_bottom = self.data_json["hsv_value_bottom"]["value"]
-        self.hsv_value_top = self.data_json["hsv_value_top"]["value"]
-        self.mode = self.data_json["mode"]["value"]
+
+        if self.first:
+            self.kernel_size = self.data_json["kernel_size"]["value"]
+            self.low_threshold = self.data_json["low_threshold"]["value"]
+            self.high_threshold = self.data_json["high_threshold"]["value"]
+            self.rho = self.data_json["rho"]["value"]
+            self.theta = self.data_json["theta"]["value"]
+            # angular resolution in radians of the Hough grid
+            self.threshold = self.data_json["threshold"]["value"]
+            # minimum number of votes (intersections in Hough grid cell)
+            self.min_line_length = self.data_json["min_line_length"]["value"]
+            # minimum number of pixels making up a line
+            self.max_line_gap = self.data_json["max_line_gap"]["value"]
+            # maximum gap in pixels between connectable line segments
+            self.current_image_mode = self.data_json["current_image_mode"]["value"]
+            self.scale_percent = self.data_json["scale_percent"]["value"]
+            self.line_visibility = self.data_json["line_visibility"]["value"]
+            self.image_window_name = self.data_json["image_window_name"]["value"]
+            self.trackbar_window_name = self.data_json["trackbar_window_name"]["value"]
+            self.top_boundary = self.data_json["top_boundary"]["value"]
+            self.bottom_boundary = self.data_json["bottom_boundary"]["value"]
+            self.left_boundary = self.data_json["left_boundary"]["value"]
+            self.right_boundary = self.data_json["right_boundary"]["value"]
+            self.middle_line_position = self.data_json["middle_line_position"]["value"]
+            self.hsv_hue_bottom = self.data_json["hsv_hue_bottom"]["value"]
+            self.hsv_hue_top = self.data_json["hsv_hue_top"]["value"]
+            self.hsv_saturation_bottom = self.data_json["hsv_saturation_bottom"][
+                "value"
+            ]
+            self.hsv_saturation_top = self.data_json["hsv_saturation_top"]["value"]
+            self.hsv_value_bottom = self.data_json["hsv_value_bottom"]["value"]
+            self.hsv_value_top = self.data_json["hsv_value_top"]["value"]
+            self.mode = self.data_json["mode"]["value"]
+            self.first = False
 
         prev_frame = np.copy(input_image)
         self.original_frame = prev_frame
