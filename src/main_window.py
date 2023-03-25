@@ -9,6 +9,33 @@ import json
 import numpy as np
 
 
+class MyVideoCapture:
+    def __init__(self, video_source=0):
+        # Open the video source
+        self.vid = cv2.VideoCapture(video_source)
+        if not self.vid.isOpened():
+            raise ValueError("Unable to open video source", video_source)
+
+        # Get video source width and height
+        self.width = self.vid.get(cv2.CAP_PROP_FRAME_WIDTH)
+        self.height = self.vid.get(cv2.CAP_PROP_FRAME_HEIGHT)
+
+    def get_frame(self):
+        if self.vid.isOpened():
+            ret, frame = self.vid.read()
+            if ret:
+                # Return a boolean success flag and the current frame converted to BGR
+                return (ret, cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+            else:
+                return (ret, None)
+        else:
+            return (ret, None)
+
+    def __del__(self):
+        if self.vid.isOpened():
+            self.vid.release()
+
+
 class WidgetSettings:
     def __init__(
         self,
@@ -148,6 +175,8 @@ class App(customtkinter.CTk):
         self.video_mode = False
         self.frame_1 = np.array([])
         self.frame_2 = np.array([])
+        self.video_source = "./vids/avalanche_without_repose.avi"
+        self.vid = MyVideoCapture(self.video_source)
         self.widgets = {}
 
         with open("config/data.json", "r", encoding="UTF8") as fp:
@@ -335,6 +364,7 @@ class App(customtkinter.CTk):
         # self.canvas.bind("<Configure>", self.resizer)
         # self.mycanvas.bind("<Configure>", self.refresh_image)
 
+        # self.window.after(self.delay, self.update)
         self.CVapp = angle_detector.AngleDetector()
         self.CVapp.load_config()
         # CVapp.main()
@@ -420,7 +450,12 @@ class App(customtkinter.CTk):
         # self.update_frames()
 
         # print(self.tst_lst)
-        self.img = cv2.imread(self.file_path)
+        if not self.video_mode:
+            self.img = cv2.imread(self.file_path)
+        else:
+            self.img = self.frame_1
+
+        # self.img = self.frame_1
 
         self.update_params()
         self.save_params()
@@ -433,22 +468,58 @@ class App(customtkinter.CTk):
         self.mycanvas.imgref = imgtk
         test_id = self.mycanvas.itemconfig(self.image_id, image=imgtk)
 
+    def get_frame(self):
+        ret, frame = self.vid.read()
+        if ret:
+            return (ret, cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        else:
+            return (ret, None)
+
+    def update():
+        ret, frame = get_frame()
+        if ret:
+            img = Image.fromarray(frame)
+            photo = ImageTk.PhotoImage(image=img)
+            canvas.create_image(0, 0, image=photo, anchor=NW)
+            canvas.image = photo
+        root.after(delay, update)
+
     def process_video(self):
+        # self.vid = cv2.VideoCapture()
+
         if True:  # self.video_mode:
-            cap = cv2.VideoCapture(self.file_path)
-            while cap.isOpened():
-                if cv2.waitKey(33) & 0xFF == ord("q"):
-                    ret, frame = cap.read()
-                    if not ret:
-                        break
-                    try:
+            self.video_mode = True
+            while True:  # cap.isOpened():
+                if True:  # cv2.waitKey(0) & 0xFF == ord("q"):
+                    ret, frame = self.vid.get_frame()
+                    if ret:
+                        # img = Image.fromarray(frame, mode="RGB")
+                        # photo = ImageTk.PhotoImage(image=img)
+
+                        # if not ret:
+                        #     break
+                        # try:
                         self.frame_1 = frame
+                        # cv2.imshow("w", frame)
+
+                        # color_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                        # widd = self.mycanvas.cget("width")
+                        # resized = self.image_resize(image=color_image, width=int(widd))
+                        # im = Image.fromarray(resized, mode="RGB")
+                        # imgtk = ImageTk.PhotoImage(image=im)
+                        # self.mycanvas.itemconfig(self.image_id, image=imgtk)
+
                         self.refresh_image()
+                        if cv2.waitKey(100) & 0xFF == ord("q"):
+                            break
                         # angle_array.append(np.mean(np.abs(angle_array)))
                         # writer.writerow(angle_array)
                         self.frame_2 = self.frame_1
-                    except:
-                        print("Could not obtain line")
+                        # self.after(15, self.process_video)
+                    else:
+                        break
+                    # except:
+                    #     print("Could not obtain line")
                 else:
                     continue
         else:
@@ -503,3 +574,4 @@ class App(customtkinter.CTk):
 if __name__ == "__main__":
     app = App()
     app.mainloop()
+    app.vid.release()
