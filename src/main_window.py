@@ -155,6 +155,7 @@ class App(customtkinter.CTk):
         self.homeStyle = GridSettings(0, 0, 0, 0, None, 50, 25, 5, 5, 10, 10, "nswe")
         self.tabStyle = GridSettings(0, 0, 1, 1, None, 50, 25, 0, 0, 10, 10, "nswe")
         self.labelStyle = GridSettings(0, 0, 0, 0, None, 50, 25, 0, 0, 0, 0, "nsew")
+        self.scrollStyle = GridSettings(0, 0, 1, 1, None, 250, 500, 5, 5, 5, 5, "ew")
         self.sliderStyle = GridSettings(0, 0, 0, 0, None, 50, 25, 0, 0, 0, 00, "nsw")
         self.entryStyle = GridSettings(0, 0, 0, 0, None, 50, 25, 0, 0, 0, 0, "nsw")
         self.buttonStyle = GridSettings(0, 0, 2, 0, None, 50, 25, 5, 5, 5, 5, "ns")
@@ -215,25 +216,56 @@ class App(customtkinter.CTk):
             master=self.navigation_frame, width=300, height=200
         )
         # self.scrollable_frame.grid(row=0, column=0, sticky="nsew")
-        self.scrollable_frame.pack(side="left", fill="both", expand=True)
-        self.tabview = customtkinter.CTkTabview(self.scrollable_frame)
-        self.tabview.grid(
-            row=self.tabStyle.row,
-            column=self.tabStyle.column,
-            rowspan=self.tabStyle.rowspan,
-            ipadx=self.tabStyle.ipadx,
-            ipady=self.tabStyle.ipady,
-            padx=self.tabStyle.padx,
-            pady=self.tabStyle.pady,
-            sticky=self.tabStyle.sticky,
-        )
+        self.tabview = customtkinter.CTkTabview(self.navigation_frame)
+        self.tabview.pack(side="left", fill="both", expand=True)
 
+        # self.tabview.grid(
+        #     row=self.tabStyle.row,
+        #     column=self.tabStyle.column,
+        #     rowspan=self.tabStyle.rowspan,
+        #     ipadx=self.tabStyle.ipadx,
+        #     ipady=self.tabStyle.ipady,
+        #     padx=self.tabStyle.padx,
+        #     pady=self.tabStyle.pady,
+        #     sticky=self.tabStyle.sticky,
+        # )
+        self.scrollable_frames = {}
+        # self.scrollable_frame = customtkinter.CTkScrollableFrame(
+        #     master=self.tabview, width=300, height=200
+        # )
+
+        # self.scrollable_frame.grid(
+        #     row=self.tabStyle.row,
+        #     column=self.tabStyle.column,
+        #     rowspan=self.tabStyle.rowspan,
+        #     ipadx=self.tabStyle.ipadx,
+        #     ipady=self.tabStyle.ipady,
+        #     padx=self.tabStyle.padx,
+        #     pady=self.tabStyle.pady,
+        #     sticky=self.tabStyle.sticky,
+        # )
         # self.tabview.grid_rowconfigure(1, weight=1)
         # self.tabview.grid_columnconfigure(1, weight=1)
-        for name in self.tab_name_lst:
+        for i, name in enumerate(self.tab_name_lst):
             self.tabview.add(name)
+            self.scrollable_frames[i] = customtkinter.CTkScrollableFrame(
+                master=self.tabview.tab(name),
+                width=self.scrollStyle.width,
+                height=self.scrollStyle.height,
+            )
+            # self.scrollable_frames[i].grid(
+            #     row=self.scrollStyle.row,
+            #     column=self.scrollStyle.column,
+            #     rowspan=self.scrollStyle.rowspan,
+            #     ipadx=self.scrollStyle.ipadx,
+            #     ipady=self.scrollStyle.ipady,
+            #     padx=self.scrollStyle.padx,
+            #     pady=self.scrollStyle.pady,
+            #     sticky=self.scrollStyle.sticky,
+            # )
+            self.scrollable_frames[i].pack(side="left", fill="both", expand=True)
 
-        self.tabview.set(self.tab_name_lst[1])
+        self.tabview.set(self.tab_name_lst[0])
 
         self.labels = {}
         self.sliders = {}
@@ -287,9 +319,7 @@ class App(customtkinter.CTk):
         for i, name in enumerate(self.widgets):
             if self.widgets[name]["type"] == "slider":
                 self.labels[name] = customtkinter.CTkLabel(
-                    master=self.tabview.tab(
-                        self.tab_name_lst[self.widgets[name]["tab"]]
-                    ),
+                    master=self.scrollable_frames[self.widgets[name]["tab"]],
                     text=self.widgets[name]["text"],
                 )
 
@@ -303,9 +333,7 @@ class App(customtkinter.CTk):
                 )
 
                 self.sliders[name] = customtkinter.CTkSlider(
-                    master=self.tabview.tab(
-                        self.tab_name_lst[self.widgets[name]["tab"]]
-                    ),
+                    master=self.scrollable_frames[self.widgets[name]["tab"]],
                     from_=self.widgets[name]["min"],
                     to=self.widgets[name]["max"],
                     number_of_steps=self.widgets[name]["step"],
@@ -318,9 +346,7 @@ class App(customtkinter.CTk):
                 )
 
                 self.entries[name] = customtkinter.CTkEntry(
-                    master=self.tabview.tab(
-                        self.tab_name_lst[self.widgets[name]["tab"]]
-                    ),
+                    master=self.scrollable_frames[self.widgets[name]["tab"]],
                     placeholder_text="CTkEntry",
                     textvariable=self.tst_lst[name],
                     width=self.entryStyle.width,
@@ -340,9 +366,7 @@ class App(customtkinter.CTk):
                 and self.widgets[name]["tab"] != 10
             ):
                 self.buttons[name] = customtkinter.CTkButton(
-                    master=self.tabview.tab(
-                        self.tab_name_lst[self.widgets[name]["tab"]]
-                    ),
+                    master=self.scrollable_frames[self.widgets[name]["tab"]],
                     width=self.buttonStyle.width,
                     height=self.buttonStyle.height,
                     text=self.widgets[name]["text"],
