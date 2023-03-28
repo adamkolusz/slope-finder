@@ -369,15 +369,6 @@ class App(customtkinter.CTk):
                     command=self.action_commands[action_ctr],
                 )
                 action_ctr += 1
-                # Union[Callable[[], None], None]
-                # self.action_buttons[name].grid(
-                #     row=actionButtonStyle.row,
-                #     column=actionButtonStyle.column,
-                #     padx=actionButtonStyle.padx,
-                #     pady=actionButtonStyle.pady,
-                #     sticky=actionButtonStyle.sticky,
-                #     columnspan=1,
-                # )
                 self.action_buttons[name].pack(side="left", fill="both", expand=True)
 
     def update_sliders(self):
