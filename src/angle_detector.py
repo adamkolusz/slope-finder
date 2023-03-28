@@ -18,34 +18,6 @@ class AngleDetector:
         self.loaded = 0
         self.data_json = self.load_config()
         self.first = True
-        self.kernel_size = self.data_json["kernel_size"]["value"]
-        self.low_threshold = self.data_json["low_threshold"]["value"]
-        self.high_threshold = self.data_json["high_threshold"]["value"]
-        self.rho = self.data_json["rho"]["value"]
-        self.theta = self.data_json["theta"]["value"]
-        # angular resolution in radians of the Hough grid
-        self.threshold = self.data_json["threshold"]["value"]
-        # minimum number of votes (intersections in Hough grid cell)
-        self.min_line_length = self.data_json["min_line_length"]["value"]
-        # minimum number of pixels making up a line
-        self.max_line_gap = self.data_json["max_line_gap"]["value"]
-        # maximum gap in pixels between connectable line segments
-        self.current_image_mode = self.data_json["current_image_mode"]["value"]
-        self.scale_percent = self.data_json["scale_percent"]["value"]
-        self.line_visibility = self.data_json["line_visibility"]["value"]
-        self.image_window_name = self.data_json["image_window_name"]["value"]
-        self.trackbar_window_name = self.data_json["trackbar_window_name"]["value"]
-        self.top_boundary = self.data_json["top_boundary"]["value"]
-        self.bottom_boundary = self.data_json["bottom_boundary"]["value"]
-        self.left_boundary = self.data_json["left_boundary"]["value"]
-        self.right_boundary = self.data_json["right_boundary"]["value"]
-        self.middle_line_position = self.data_json["middle_line_position"]["value"]
-        self.hsv_hue_bottom = self.data_json["hsv_hue_bottom"]["value"]
-        self.hsv_hue_top = self.data_json["hsv_hue_top"]["value"]
-        self.hsv_saturation_bottom = self.data_json["hsv_saturation_bottom"]["value"]
-        self.hsv_saturation_top = self.data_json["hsv_saturation_top"]["value"]
-        self.hsv_value_bottom = self.data_json["hsv_value_bottom"]["value"]
-        self.hsv_value_top = self.data_json["hsv_value_top"]["value"]
         self.current_frame = np.array([])
         self.next_frame = np.array([])
         self.original_frame = np.array([])
@@ -57,12 +29,47 @@ class AngleDetector:
         self.thresh = 50
         self.path = "C:/Users/adamk/Projects/cone_detection/img/fluent/Results"
         self.mode = 0
+        self.update_parameters(self.data_json)
         # self.current_frame = self.load_image(self.path)
+
+    def update_parameters(self, config):
+        self.kernel_size = config["kernel_size"]["value"]
+        self.low_threshold = config["low_threshold"]["value"]
+        self.high_threshold = config["high_threshold"]["value"]
+        self.rho = config["rho"]["value"]
+        self.theta = config["theta"]["value"]
+        # angular resolution in radians of the Hough grid
+        self.threshold = config["threshold"]["value"]
+        # minimum number of votes (intersections in Hough grid cell)
+        self.min_line_length = config["min_line_length"]["value"]
+        # minimum number of pixels making up a line
+        self.max_line_gap = config["max_line_gap"]["value"]
+        # maximum gap in pixels between connectable line segments
+        self.current_image_mode = config["current_image_mode"]["value"]
+        self.scale_percent = config["scale_percent"]["value"]
+        self.line_visibility = config["line_visibility"]["value"]
+        self.image_window_name = config["image_window_name"]["value"]
+        self.trackbar_window_name = config["trackbar_window_name"]["value"]
+        self.top_boundary = config["top_boundary"]["value"]
+        self.bottom_boundary = config["bottom_boundary"]["value"]
+        self.left_boundary = config["left_boundary"]["value"]
+        self.right_boundary = config["right_boundary"]["value"]
+        self.middle_line_position = config["middle_line_position"]["value"]
+        self.hsv_hue_bottom = config["hsv_hue_bottom"]["value"]
+        self.hsv_hue_top = config["hsv_hue_top"]["value"]
+        self.hsv_saturation_bottom = config["hsv_saturation_bottom"]["value"]
+        self.hsv_saturation_top = config["hsv_saturation_top"]["value"]
+        self.hsv_value_bottom = config["hsv_value_bottom"]["value"]
+        self.hsv_value_top = config["hsv_value_top"]["value"]
 
     def load_config(self):
         with open("config/data.json", "r") as f:
             data_json = json.load(f)
         return data_json
+
+    def save_config(self, data_dict):
+        with open("config/data_save.json", "w") as fp:
+            json.dump(data_dict, fp, indent=4)
 
     def refresh_view(self):
         try:
@@ -733,7 +740,7 @@ class AngleDetector:
             print("Data not saved to csv!")
 
     def generate_video_from_path(self, path, video_name, fps):
-        file_list = list_files_in_dir(path)
+        file_list = self.list_files_in_dir(path)
         frame = cv2.imread(os.path.join(path, file_list[0]))
         height, width, layers = frame.shape
 

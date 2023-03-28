@@ -21,13 +21,17 @@ class MyVideoCapture:
         self.width = self.vid.get(cv2.CAP_PROP_FRAME_WIDTH)
         self.height = self.vid.get(cv2.CAP_PROP_FRAME_HEIGHT)
         self.imgs = []
+        _, self.first_frame = self.get_frame()
+        self.current_frame = self.first_frame
 
     def get_frame(self):
         if self.vid.isOpened():
             ret, frame = self.vid.read()
             if ret:
+                rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                self.current_frame = rgb_frame
                 # Return a boolean success flag and the current frame converted to BGR
-                return (ret, cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+                return (ret, rgb_frame)
             else:
                 return (ret, None)
         else:
@@ -147,23 +151,25 @@ class App(customtkinter.CTk):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
 
-        frameStyle = GridSettings(0, 0, 0, 0, None, 50, 25, 0, 0, 0, 0, "nswe")
-        homeStyle = GridSettings(0, 0, 0, 0, None, 50, 25, 5, 5, 10, 10, "nswe")
-        tabStyle = GridSettings(0, 0, 1, 1, None, 50, 25, 0, 0, 10, 10, "nswe")
-        labelStyle = GridSettings(0, 0, 0, 0, None, 50, 25, 0, 0, 0, 0, "nsew")
-        sliderStyle = GridSettings(0, 0, 0, 0, None, 50, 25, 0, 0, 0, 00, "nsw")
-        entryStyle = GridSettings(0, 0, 0, 0, None, 50, 25, 0, 0, 0, 0, "nsw")
-        buttonStyle = GridSettings(0, 0, 2, 0, None, 50, 25, 5, 5, 5, 5, "ns")
-        actionButtonStyle = GridSettings(0, 0, 0, 0, None, 25, 25, 0, 0, 0, 0, "nsw")
+        self.frameStyle = GridSettings(0, 0, 0, 0, None, 50, 25, 0, 0, 0, 0, "nswe")
+        self.homeStyle = GridSettings(0, 0, 0, 0, None, 50, 25, 5, 5, 10, 10, "nswe")
+        self.tabStyle = GridSettings(0, 0, 1, 1, None, 50, 25, 0, 0, 10, 10, "nswe")
+        self.labelStyle = GridSettings(0, 0, 0, 0, None, 50, 25, 0, 0, 0, 0, "nsew")
+        self.sliderStyle = GridSettings(0, 0, 0, 0, None, 50, 25, 0, 0, 0, 00, "nsw")
+        self.entryStyle = GridSettings(0, 0, 0, 0, None, 50, 25, 0, 0, 0, 0, "nsw")
+        self.buttonStyle = GridSettings(0, 0, 2, 0, None, 50, 25, 5, 5, 5, 5, "ns")
+        self.actionButtonStyle = GridSettings(
+            0, 0, 0, 0, None, 25, 25, 0, 0, 0, 0, "nsw"
+        )
 
         # LAYOUT
         self.navigation_frame = customtkinter.CTkFrame(self, corner_radius=0)
         self.navigation_frame.grid(
-            row=frameStyle.row,
-            column=frameStyle.column,
-            padx=frameStyle.padx,
-            pady=frameStyle.pady,
-            sticky=frameStyle.sticky,
+            row=self.frameStyle.row,
+            column=self.frameStyle.column,
+            padx=self.frameStyle.padx,
+            pady=self.frameStyle.pady,
+            sticky=self.frameStyle.sticky,
         )
 
         # self.navigation_frame.grid_rowconfigure(0, weight=1)
@@ -184,8 +190,10 @@ class App(customtkinter.CTk):
         self.video_mode = False
         self.frame_1 = np.array([])
         self.frame_2 = np.array([])
+        self.frame_width = 0
+        self.frame_height = 0
         self.video_source = "./vids/avalanche_without_repose.avi"
-        self.vid = MyVideoCapture(self.video_source)
+        self.vid = None
         self.widgets = {}
 
         with open("config/data.json", "r", encoding="UTF8") as fp:
@@ -210,14 +218,14 @@ class App(customtkinter.CTk):
         self.scrollable_frame.pack(side="left", fill="both", expand=True)
         self.tabview = customtkinter.CTkTabview(self.scrollable_frame)
         self.tabview.grid(
-            row=tabStyle.row,
-            column=tabStyle.column,
-            rowspan=tabStyle.rowspan,
-            ipadx=tabStyle.ipadx,
-            ipady=tabStyle.ipady,
-            padx=tabStyle.padx,
-            pady=tabStyle.pady,
-            sticky=tabStyle.sticky,
+            row=self.tabStyle.row,
+            column=self.tabStyle.column,
+            rowspan=self.tabStyle.rowspan,
+            ipadx=self.tabStyle.ipadx,
+            ipady=self.tabStyle.ipady,
+            padx=self.tabStyle.padx,
+            pady=self.tabStyle.pady,
+            sticky=self.tabStyle.sticky,
         )
 
         # self.tabview.grid_rowconfigure(1, weight=1)
@@ -242,102 +250,7 @@ class App(customtkinter.CTk):
             self.refresh_image,
         ]
         self.img_refs = []
-        action_ctr = 0
-        for i, name in enumerate(self.widgets):
-            if self.widgets[name]["type"] == "slider":
-                self.labels[name] = customtkinter.CTkLabel(
-                    master=self.tabview.tab(
-                        self.tab_name_lst[self.widgets[name]["tab"]]
-                    ),
-                    text=self.widgets[name]["text"],
-                )
-
-                self.labels[name].grid(
-                    row=labelStyle.row + i * 2,
-                    column=labelStyle.column,
-                    padx=labelStyle.padx,
-                    pady=labelStyle.pady,
-                    sticky=labelStyle.sticky,
-                    columnspan=2,
-                )
-
-                self.sliders[name] = customtkinter.CTkSlider(
-                    master=self.tabview.tab(
-                        self.tab_name_lst[self.widgets[name]["tab"]]
-                    ),
-                    from_=self.widgets[name]["min"],
-                    to=self.widgets[name]["max"],
-                    number_of_steps=self.widgets[name]["step"],
-                    command=self.refresh_image,
-                    variable=self.tst_lst[name],
-                )
-
-                self.sliders[name].grid(
-                    row=sliderStyle.row + 1 + i * 2, column=sliderStyle.column
-                )
-
-                self.entries[name] = customtkinter.CTkEntry(
-                    master=self.tabview.tab(
-                        self.tab_name_lst[self.widgets[name]["tab"]]
-                    ),
-                    placeholder_text="CTkEntry",
-                    textvariable=self.tst_lst[name],
-                    width=entryStyle.width,
-                    height=entryStyle.height,
-                )
-
-                # self.entry.bind("<Return>", command=self.get_text)
-
-                self.entries[name].grid(
-                    row=sliderStyle.row + 1 + i * 2,
-                    column=sliderStyle.column + 1,
-                    padx=entryStyle.padx,
-                    pady=entryStyle.pady,
-                )
-            elif (
-                self.widgets[name]["type"] == "button"
-                and self.widgets[name]["tab"] != 10
-            ):
-                self.buttons[name] = customtkinter.CTkButton(
-                    master=self.tabview.tab(
-                        self.tab_name_lst[self.widgets[name]["tab"]]
-                    ),
-                    width=buttonStyle.width,
-                    height=buttonStyle.height,
-                    text=self.widgets[name]["text"],
-                    command=self.select_file,
-                )
-                # Union[Callable[[], None], None]
-                self.buttons[name].grid(
-                    row=buttonStyle.row + i * 2,
-                    column=buttonStyle.column,
-                    padx=buttonStyle.padx,
-                    pady=buttonStyle.pady,
-                    sticky=buttonStyle.sticky,
-                    columnspan=buttonStyle.columnspan,
-                )
-            elif (
-                self.widgets[name]["type"] == "button"
-                and self.widgets[name]["tab"] == 10
-            ):
-                self.action_buttons[name] = customtkinter.CTkButton(
-                    master=self.button_frame,
-                    text=str(self.widgets[name]["text"]),
-                    width=actionButtonStyle.width,
-                    height=actionButtonStyle.height,
-                    command=self.action_commands[action_ctr],
-                )
-                action_ctr += 1
-                # Union[Callable[[], None], None]
-                # self.action_buttons[name].grid(
-                #     row=actionButtonStyle.row,
-                #     column=actionButtonStyle.column,
-                #     padx=actionButtonStyle.padx,
-                #     pady=actionButtonStyle.pady,
-                #     sticky=actionButtonStyle.sticky,
-                #     columnspan=1,
-                # )
-                self.action_buttons[name].pack(side="left", fill="both", expand=True)
+        self.init_widgets()
 
         self.image_path = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
@@ -369,6 +282,130 @@ class App(customtkinter.CTk):
         self.CVapp.load_config()
         # CVapp.main()
 
+    def init_widgets(self):
+        action_ctr = 0
+        for i, name in enumerate(self.widgets):
+            if self.widgets[name]["type"] == "slider":
+                self.labels[name] = customtkinter.CTkLabel(
+                    master=self.tabview.tab(
+                        self.tab_name_lst[self.widgets[name]["tab"]]
+                    ),
+                    text=self.widgets[name]["text"],
+                )
+
+                self.labels[name].grid(
+                    row=self.labelStyle.row + i * 2,
+                    column=self.labelStyle.column,
+                    padx=self.labelStyle.padx,
+                    pady=self.labelStyle.pady,
+                    sticky=self.labelStyle.sticky,
+                    columnspan=2,
+                )
+
+                self.sliders[name] = customtkinter.CTkSlider(
+                    master=self.tabview.tab(
+                        self.tab_name_lst[self.widgets[name]["tab"]]
+                    ),
+                    from_=self.widgets[name]["min"],
+                    to=self.widgets[name]["max"],
+                    number_of_steps=self.widgets[name]["step"],
+                    command=self.refresh_image,
+                    variable=self.tst_lst[name],
+                )
+
+                self.sliders[name].grid(
+                    row=self.sliderStyle.row + 1 + i * 2, column=self.sliderStyle.column
+                )
+
+                self.entries[name] = customtkinter.CTkEntry(
+                    master=self.tabview.tab(
+                        self.tab_name_lst[self.widgets[name]["tab"]]
+                    ),
+                    placeholder_text="CTkEntry",
+                    textvariable=self.tst_lst[name],
+                    width=self.entryStyle.width,
+                    height=self.entryStyle.height,
+                )
+
+                # self.entry.bind("<Return>", command=self.get_text)
+
+                self.entries[name].grid(
+                    row=self.sliderStyle.row + 1 + i * 2,
+                    column=self.sliderStyle.column + 1,
+                    padx=self.entryStyle.padx,
+                    pady=self.entryStyle.pady,
+                )
+            elif (
+                self.widgets[name]["type"] == "button"
+                and self.widgets[name]["tab"] != 10
+            ):
+                self.buttons[name] = customtkinter.CTkButton(
+                    master=self.tabview.tab(
+                        self.tab_name_lst[self.widgets[name]["tab"]]
+                    ),
+                    width=self.buttonStyle.width,
+                    height=self.buttonStyle.height,
+                    text=self.widgets[name]["text"],
+                    command=self.select_file,
+                )
+                # Union[Callable[[], None], None]
+                self.buttons[name].grid(
+                    row=self.buttonStyle.row + i * 2,
+                    column=self.buttonStyle.column,
+                    padx=self.buttonStyle.padx,
+                    pady=self.buttonStyle.pady,
+                    sticky=self.buttonStyle.sticky,
+                    columnspan=self.buttonStyle.columnspan,
+                )
+            elif (
+                self.widgets[name]["type"] == "button"
+                and self.widgets[name]["tab"] == 10
+            ):
+                self.action_buttons[name] = customtkinter.CTkButton(
+                    master=self.button_frame,
+                    text=str(self.widgets[name]["text"]),
+                    width=self.actionButtonStyle.width,
+                    height=self.actionButtonStyle.height,
+                    command=self.action_commands[action_ctr],
+                )
+                action_ctr += 1
+                # Union[Callable[[], None], None]
+                # self.action_buttons[name].grid(
+                #     row=actionButtonStyle.row,
+                #     column=actionButtonStyle.column,
+                #     padx=actionButtonStyle.padx,
+                #     pady=actionButtonStyle.pady,
+                #     sticky=actionButtonStyle.sticky,
+                #     columnspan=1,
+                # )
+                self.action_buttons[name].pack(side="left", fill="both", expand=True)
+
+    def update_sliders(self):
+        self.update_widget_parameters()
+        for name in self.sliders:
+            self.sliders[name].configure(
+                from_=self.widgets[name]["min"],
+                to=self.widgets[name]["max"],
+                number_of_steps=self.widgets[name]["step"],
+            )
+
+    def update_widget_parameters(self):
+        self.update_frame_size()
+        self.widgets["top_boundary"]["max"] = self.frame_height
+        self.widgets["top_boundary"]["step"] = self.frame_height
+
+        self.widgets["bottom_boundary"]["max"] = self.frame_height
+        self.widgets["bottom_boundary"]["step"] = self.frame_height
+
+        self.widgets["left_boundary"]["max"] = self.frame_width
+        self.widgets["left_boundary"]["step"] = self.frame_width
+
+        self.widgets["right_boundary"]["max"] = self.frame_width
+        self.widgets["right_boundary"]["step"] = self.frame_width
+
+        self.widgets["middle_line_position"]["max"] = self.frame_width
+        self.widgets["middle_line_position"]["step"] = self.frame_width
+
     def initial_values(self):
         self.init = 0
         for i, name in enumerate(self.widgets):
@@ -376,6 +413,9 @@ class App(customtkinter.CTk):
                 self.tst_lst[name].set(self.widgets[name]["value"])
 
     def save_params(self):
+        pass
+        # with open("config/data.json", "w") as fp:
+        #     json.dump(self.widgets, fp, indent=4)
         for i, name in enumerate(self.widgets):
             if self.widgets[name]["type"] == "slider":
                 # print(f"{self.sliders[name].get()=}")
@@ -387,6 +427,7 @@ class App(customtkinter.CTk):
     def update_params(self):
         # self.CVapp.top_boundary = self.widgets["top_boundary"]["value"]
         self.CVapp.data_json = self.widgets
+
         # self.CVapp.bottom_boundary = self.widgets["bottom_boundary"]["value"]
         # print("EEEEEEEEEEEEE", self.widgets)
         # self.CVapp.top_boundary = 120
@@ -414,16 +455,24 @@ class App(customtkinter.CTk):
             ("png", "*.png"),
             ("tiff", "*.tiff"),
             ("mp4", "*.mp4"),
+            ("avi", "*.avi"),
             ("All files", "*.*"),
         )
 
         self.file_path = tkinter.filedialog.askopenfilename(
             title="Open a file", initialdir="./img", filetypes=filetypes
         )
-        if self.file_path.endswith("mp4"):
+        if self.file_path.endswith("mp4") or self.file_path.endswith("avi"):
             self.video_mode = True
+            self.video_source = self.file_path
+            self.vid = MyVideoCapture(self.video_source)
+            self.update_params()
+            print("Video mode!")
         else:
             self.video_mode = False
+            self.video_source = None
+            self.frame_1 = cv2.imread(self.file_path)
+            self.update_params()
         self.title(f"Slope Finder ({self.file_path})")
 
     def image_resize(self, image, width=None, height=None, inter=cv2.INTER_AREA):
@@ -447,87 +496,80 @@ class App(customtkinter.CTk):
     def refresh_image(self, val=0):
         if self.init == 1:
             self.initial_values()
-        # self.update_frames()
-
-        # print(self.tst_lst)
         if not self.video_mode:
             self.img = cv2.imread(self.file_path)
         else:
-            self.img = self.frame_1
-
-        # self.img = self.frame_1
+            self.img = self.vid.current_frame
 
         self.update_params()
         self.save_params()
         self.CVapp.calculate_lines(self.img)
         color_image = cv2.cvtColor(self.CVapp.current_frame, cv2.COLOR_BGR2RGB)
         canvas_width = self.image_canvas.cget("width")
-        resized = self.image_resize(image=color_image, width=int(canvas_width))
+        canvas_height = self.image_canvas.cget("height")
+        print(np.shape(self.img))
+        frame_size = np.shape(self.img)
+        if frame_size[1] > frame_size[0]:
+            resized = self.image_resize(image=color_image, width=int(canvas_width))
+        else:
+            resized = self.image_resize(image=color_image, height=int(canvas_height))
         im = Image.fromarray(resized, mode="RGB")
         imgtk = ImageTk.PhotoImage(image=im)
 
         self.image_canvas.imgref = imgtk
-        # self.image_canvas.im = im
-        # global ref_list_global
-        # ref_list_global.append(imgtk)
-
-        # self.mycanvas.imgrefs.append(imgtk)
         test_id = self.image_canvas.itemconfig(
             self.image_id, image=self.image_canvas.imgref
         )
 
-    def get_frame(self):
-        ret, frame = self.vid.read()
-        if ret:
-            return (ret, cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-        else:
-            return (ret, None)
+    def update_frame_size(self):
+        frame_dim = np.shape(self.img)
+        print(f"{frame_dim=}")
+        self.frame_width = frame_dim[1]
+        self.frame_height = frame_dim[0]
+
+    # def get_frame(self):
+    #     ret, frame = self.vid.read()
+    #     if ret:
+    #         return (ret, cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+    #     else:
+    #         return (ret, None)
 
     def process_video(self):
-        # self.vid = cv2.VideoCapture()
-        self.vid.get_video()
-        if True:  # self.video_mode:
-            self.video_mode = True
-            for i, frame in enumerate(self.vid.imgs):
-                # while True:  # cap.isOpened():
-                if True:  # cv2.waitKey(0) & 0xFF == ord("q"):
-                    print(f"{i=}")
-                    # ret, frame = self.vid.get_frame()
+        # self.video_mode:
+        # self.video_mode = True
+        self.vid = MyVideoCapture(self.video_source)
+        while True:
+            ret, frame = self.vid.get_frame()
+            if not ret:
+                break
+            self.frame_1 = frame
+            self.refresh_image()
+            self.update()
+            # angle_array.append(np.mean(np.abs(angle_array)))
+            # writer.writerow(angle_array)
+            # self.frame_2 = self.frame_1
+            # self.after(15, self.process_video)
 
-                    self.frame_1 = frame
-                    # cv2.imshow("w", frame)
-
-                    # time.sleep(0.1)
-                    self.refresh_image()
-                    self.update()
-                    # if cv2.waitKey(10) & 0xFF == ord("q"):
-                    #     break
-                    # angle_array.append(np.mean(np.abs(angle_array)))
-                    # writer.writerow(angle_array)
-                    self.frame_2 = self.frame_1
-                    # self.after(15, self.process_video)
-
-                    # except:
-                    #     print("Could not obtain line")
-
-        else:
-            self.frame_1 = cv2.imread(self.file_path)
+            # except:
+            #     print("Could not obtain line")
+        # self.video_mode = False
 
     def next_frame(self):
-        print("next")
+        self.update_sliders()
+        self.CVapp.save_config(self.widgets)
 
     def play_pause(self):
         print("play")
 
-    def resizer(self, event):
-        w, h = event.width - 100, event.height - 100
-        self.canvas.config(width=w, height=h)
-        # color_image = cv2.cvtColor(self.CVapp.current_frame, cv2.COLOR_BGR2RGB)
-        # im = Image.fromarray(color_image, mode="RGB")
-        # # image1 = Image.open(self.file_path)
-        # resized_image = im.resize((e.width, e.height), Image.Resampling.LANCZOS)
-        # new_image = ImageTk.PhotoImage(resized_image)
-        # self.canvas.itemconfigure(self.image_id, image=new_image)
+    # def resizer(self, event):
+    #     w, h = event.width - 100, event.height - 100
+    #     self.canvas.config(width=w, height=h)
+    # color_image = cv2.cvtColor(self.CVapp.current_frame, cv2.COLOR_BGR2RGB)
+    # im = Image.fromarray(color_image, mode="RGB")
+    # # image1 = Image.open(self.file_path)
+    # resized_image = im.resize((e.width, e.height), Image.Resampling.LANCZOS)
+    # new_image = ImageTk.PhotoImage(resized_image)
+    # self.canvas.itemconfigure(self.image_id, image=new_image)
 
     # def resize_image(e):
     #     color_image = cv2.cvtColor(self.CVapp.current_frame, cv2.COLOR_BGR2RGB)
