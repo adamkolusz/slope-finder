@@ -20,6 +20,7 @@ class MyVideoCapture:
         # Get video source width and height
         self.width = self.vid.get(cv2.CAP_PROP_FRAME_WIDTH)
         self.height = self.vid.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        self.length = self.vid.get(cv2.CAP_PROP_FRAME_COUNT)
         self.imgs = []
         _, self.first_frame = self.get_frame()
         self.current_frame = self.first_frame
@@ -275,12 +276,20 @@ class App(customtkinter.CTk):
 
         self.file_path = "./img/piv/piv2.png"
 
-        self.action_commands = [
+        self.action_buttons_commands = [
             self.next_frame,
             self.process_video,
             self.refresh_image,
             self.refresh_image,
         ]
+
+        self.menu_buttons_commands = [
+            self.select_file,
+            self.save_file,
+            self.load_config,
+            self.save_config,
+        ]
+
         self.img_refs = []
         self.init_widgets()
 
@@ -314,8 +323,18 @@ class App(customtkinter.CTk):
         self.CVapp.load_config()
         # CVapp.main()
 
+    def save_file(self):
+        pass
+
+    def load_config(self):
+        pass
+
+    def save_config(self):
+        pass
+
     def init_widgets(self):
         action_ctr = 0
+        menu_btn_ctr = 0
         for i, name in enumerate(self.widgets):
             if self.widgets[name]["type"] == "slider":
                 self.labels[name] = customtkinter.CTkLabel(
@@ -370,7 +389,7 @@ class App(customtkinter.CTk):
                     width=self.buttonStyle.width,
                     height=self.buttonStyle.height,
                     text=self.widgets[name]["text"],
-                    command=self.select_file,
+                    command=self.menu_buttons_commands[menu_btn_ctr],
                 )
                 # Union[Callable[[], None], None]
                 self.buttons[name].grid(
@@ -381,6 +400,7 @@ class App(customtkinter.CTk):
                     sticky=self.buttonStyle.sticky,
                     columnspan=self.buttonStyle.columnspan,
                 )
+                menu_btn_ctr += 1
             elif (
                 self.widgets[name]["type"] == "button"
                 and self.widgets[name]["tab"] == 10
@@ -390,7 +410,7 @@ class App(customtkinter.CTk):
                     text=str(self.widgets[name]["text"]),
                     width=self.actionButtonStyle.width,
                     height=self.actionButtonStyle.height,
-                    command=self.action_commands[action_ctr],
+                    command=self.action_buttons_commands[action_ctr],
                 )
                 action_ctr += 1
                 self.action_buttons[name].pack(side="left", fill="both", expand=True)
@@ -467,11 +487,11 @@ class App(customtkinter.CTk):
 
     def select_file(self):
         filetypes = (
+            ("All files", "*.*"),
             ("png", "*.png"),
             ("tiff", "*.tiff"),
             ("mp4", "*.mp4"),
             ("avi", "*.avi"),
-            ("All files", "*.*"),
         )
 
         self.file_path = tkinter.filedialog.askopenfilename(
@@ -518,7 +538,7 @@ class App(customtkinter.CTk):
 
         self.update_params()
         self.save_params()
-        self.CVapp.calculate_lines(self.img)
+        angle_array, _, _ = self.CVapp.calculate_lines(self.img)
         color_image = cv2.cvtColor(self.CVapp.current_frame, cv2.COLOR_BGR2RGB)
         canvas_width = self.image_canvas.cget("width")
         canvas_height = self.image_canvas.cget("height")
@@ -535,6 +555,7 @@ class App(customtkinter.CTk):
         test_id = self.image_canvas.itemconfig(
             self.image_id, image=self.image_canvas.imgref
         )
+        return angle_array
 
     def update_frame_size(self):
         frame_dim = np.shape(self.img)
@@ -552,13 +573,15 @@ class App(customtkinter.CTk):
     def process_video(self):
         # self.video_mode:
         # self.video_mode = True
+        total_array = []
         self.vid = MyVideoCapture(self.video_source)
         while True:
             ret, frame = self.vid.get_frame()
             if not ret:
                 break
             self.frame_1 = frame
-            self.refresh_image()
+            current_angles = self.refresh_image()
+            total_array.append(current_angles)
             self.update()
             # angle_array.append(np.mean(np.abs(angle_array)))
             # writer.writerow(angle_array)
@@ -568,6 +591,7 @@ class App(customtkinter.CTk):
             # except:
             #     print("Could not obtain line")
         # self.video_mode = False
+        self.CVapp.save_to_csv(total_array, True)
 
     def next_frame(self):
         self.update_sliders()

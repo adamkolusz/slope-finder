@@ -70,6 +70,7 @@ class AngleDetector:
     def save_config(self, data_dict):
         with open("config/data_save.json", "w") as fp:
             json.dump(data_dict, fp, indent=4)
+        print("Saved config!")
 
     def refresh_view(self):
         try:
