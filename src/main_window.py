@@ -12,7 +12,6 @@ import time
 
 class MyVideoCapture:
     def __init__(self, video_source=0):
-        # Open the video source
         self.vid = cv2.VideoCapture(video_source)
         if not self.vid.isOpened():
             raise ValueError("Unable to open video source", video_source)
@@ -22,6 +21,7 @@ class MyVideoCapture:
         self.height = self.vid.get(cv2.CAP_PROP_FRAME_HEIGHT)
         self.length = self.vid.get(cv2.CAP_PROP_FRAME_COUNT)
         self.imgs = []
+        self.frame_number = 0
         _, self.first_frame = self.get_frame()
         self.current_frame = self.first_frame
 
@@ -31,6 +31,7 @@ class MyVideoCapture:
             if ret:
                 rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 self.current_frame = rgb_frame
+                self.frame_number += 1
                 # Return a boolean success flag and the current frame converted to BGR
                 return (ret, rgb_frame)
             else:
@@ -174,20 +175,19 @@ class App(customtkinter.CTk):
             sticky=self.frameStyle.sticky,
         )
 
-        # self.navigation_frame.grid_rowconfigure(0, weight=1)
-        # self.navigation_frame.grid_columnconfigure(0, weight=1)
-
         self.home_frame = customtkinter.CTkFrame(self, corner_radius=0)
         self.button_frame = customtkinter.CTkFrame(
             self.navigation_frame, corner_radius=0, height=120
         )
-        # self.home_frame.grid(row=0, column=1, sticky="nw")
+        self.display_frame = customtkinter.CTkFrame(
+            self.navigation_frame, corner_radius=0, height=120
+        )
 
-        # self.home_frame.grid_rowconfigure(0, weight=1)
-        # self.home_frame.grid_columnconfigure(0, weight=1)
         self.navigation_frame.pack(side="left", fill="both", expand=False)
         self.home_frame.pack(side="left", fill="both", expand=True)
         self.button_frame.pack(side="bottom", fill="y", expand=False)
+        self.display_frame.pack(side="bottom", fill="both", expand=False)
+
         self.tab_name_lst = ["Options", "Filter", "Position"]
         self.video_mode = False
         self.frame_1 = np.array([])
@@ -216,37 +216,10 @@ class App(customtkinter.CTk):
         self.scrollable_frame = customtkinter.CTkScrollableFrame(
             master=self.navigation_frame, width=300, height=200
         )
-        # self.scrollable_frame.grid(row=0, column=0, sticky="nsew")
         self.tabview = customtkinter.CTkTabview(self.navigation_frame)
         self.tabview.pack(side="left", fill="both", expand=True)
-
-        # self.tabview.grid(
-        #     row=self.tabStyle.row,
-        #     column=self.tabStyle.column,
-        #     rowspan=self.tabStyle.rowspan,
-        #     ipadx=self.tabStyle.ipadx,
-        #     ipady=self.tabStyle.ipady,
-        #     padx=self.tabStyle.padx,
-        #     pady=self.tabStyle.pady,
-        #     sticky=self.tabStyle.sticky,
-        # )
         self.scrollable_frames = {}
-        # self.scrollable_frame = customtkinter.CTkScrollableFrame(
-        #     master=self.tabview, width=300, height=200
-        # )
 
-        # self.scrollable_frame.grid(
-        #     row=self.tabStyle.row,
-        #     column=self.tabStyle.column,
-        #     rowspan=self.tabStyle.rowspan,
-        #     ipadx=self.tabStyle.ipadx,
-        #     ipady=self.tabStyle.ipady,
-        #     padx=self.tabStyle.padx,
-        #     pady=self.tabStyle.pady,
-        #     sticky=self.tabStyle.sticky,
-        # )
-        # self.tabview.grid_rowconfigure(1, weight=1)
-        # self.tabview.grid_columnconfigure(1, weight=1)
         for i, name in enumerate(self.tab_name_lst):
             self.tabview.add(name)
             self.scrollable_frames[i] = customtkinter.CTkScrollableFrame(
@@ -254,16 +227,6 @@ class App(customtkinter.CTk):
                 width=self.scrollStyle.width,
                 height=self.scrollStyle.height,
             )
-            # self.scrollable_frames[i].grid(
-            #     row=self.scrollStyle.row,
-            #     column=self.scrollStyle.column,
-            #     rowspan=self.scrollStyle.rowspan,
-            #     ipadx=self.scrollStyle.ipadx,
-            #     ipady=self.scrollStyle.ipady,
-            #     padx=self.scrollStyle.padx,
-            #     pady=self.scrollStyle.pady,
-            #     sticky=self.scrollStyle.sticky,
-            # )
             self.scrollable_frames[i].pack(side="left", fill="both", expand=True)
 
         self.tabview.set(self.tab_name_lst[0])
@@ -273,6 +236,7 @@ class App(customtkinter.CTk):
         self.entries = {}
         self.buttons = {}
         self.action_buttons = {}
+        self.progress_bars = {}
 
         self.file_path = "./img/piv/piv2.png"
 
@@ -321,7 +285,6 @@ class App(customtkinter.CTk):
 
         self.CVapp = angle_detector.AngleDetector()
         self.CVapp.load_config()
-        # CVapp.main()
 
     def save_file(self):
         pass
@@ -401,10 +364,7 @@ class App(customtkinter.CTk):
                     columnspan=self.buttonStyle.columnspan,
                 )
                 menu_btn_ctr += 1
-            elif (
-                self.widgets[name]["type"] == "button"
-                and self.widgets[name]["tab"] == 10
-            ):
+            elif self.widgets[name]["type"] == "action_button":
                 self.action_buttons[name] = customtkinter.CTkButton(
                     master=self.button_frame,
                     text=str(self.widgets[name]["text"]),
@@ -414,6 +374,22 @@ class App(customtkinter.CTk):
                 )
                 action_ctr += 1
                 self.action_buttons[name].pack(side="left", fill="both", expand=True)
+            elif self.widgets[name]["type"] == "display_label":
+                if name == "percent_label":
+                    self.progress_bars[name] = customtkinter.CTkProgressBar(
+                        master=self.display_frame
+                    )
+                    self.progress_bars[name].pack(
+                        side="bottom", fill="both", expand=True
+                    )
+                    self.progress_bars[name].set(0)
+
+                self.labels[name] = customtkinter.CTkLabel(
+                    master=self.display_frame,
+                    text=self.widgets[name]["text"],
+                )
+
+                self.labels[name].pack(side="bottom", fill="both", expand=True)
 
     def update_sliders(self):
         self.update_widget_parameters()
@@ -535,6 +511,11 @@ class App(customtkinter.CTk):
             self.img = cv2.imread(self.file_path)
         else:
             self.img = self.vid.current_frame
+            percentage = self.vid.frame_number / self.vid.length
+            self.labels["percent_label"].configure(
+                text=f"Frame {int(self.vid.frame_number)}/{int(self.vid.length)}"
+            )
+            self.progress_bars["percent_label"].set(percentage)
 
         self.update_params()
         self.save_params()
@@ -542,7 +523,6 @@ class App(customtkinter.CTk):
         color_image = cv2.cvtColor(self.CVapp.current_frame, cv2.COLOR_BGR2RGB)
         canvas_width = self.image_canvas.cget("width")
         canvas_height = self.image_canvas.cget("height")
-        print(np.shape(self.img))
         frame_size = np.shape(self.img)
         if frame_size[1] > frame_size[0]:
             resized = self.image_resize(image=color_image, width=int(canvas_width))

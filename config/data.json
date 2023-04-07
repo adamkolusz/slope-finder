@@ -250,7 +250,37 @@
         "type": "slider"
     },
     "open_file": {
-        "text": "open_file",
+        "text": "Open file",
+        "int": 0,
+        "max": 0,
+        "min": 0,
+        "step": 0,
+        "tab": 0,
+        "value": "0",
+        "type": "button"
+    },
+    "save_file": {
+        "text": "Save file",
+        "int": 0,
+        "max": 0,
+        "min": 0,
+        "step": 0,
+        "tab": 0,
+        "value": "0",
+        "type": "button"
+    },
+    "load_config": {
+        "text": "Load config",
+        "int": 0,
+        "max": 0,
+        "min": 0,
+        "step": 0,
+        "tab": 0,
+        "value": "0",
+        "type": "button"
+    },
+    "save_config": {
+        "text": "Save config",
         "int": 0,
         "max": 0,
         "min": 0,
@@ -267,7 +297,7 @@
         "step": 0,
         "tab": 10,
         "value": "0",
-        "type": "button"
+        "type": "action_button"
     },
     "play_button": {
         "text": "\u23ef\ufe0e",
@@ -277,7 +307,7 @@
         "step": 0,
         "tab": 10,
         "value": "0",
-        "type": "button"
+        "type": "action_button"
     },
     "next_button": {
         "text": "\u23e9\ufe0e",
@@ -287,7 +317,7 @@
         "step": 0,
         "tab": 10,
         "value": "0",
-        "type": "button"
+        "type": "action_button"
     },
     "refresh_button": {
         "text": "\u21ba",
@@ -297,6 +327,16 @@
         "step": 0,
         "tab": 10,
         "value": "0",
-        "type": "button"
+        "type": "action_button"
+    },
+    "percent_label": {
+        "text": "1/1",
+        "int": 0,
+        "max": 0,
+        "min": 0,
+        "step": 0,
+        "tab": 11,
+        "value": "0",
+        "type": "display_label"
     }
 }
