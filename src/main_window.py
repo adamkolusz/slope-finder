@@ -192,6 +192,7 @@ class App(customtkinter.CTk):
         self.video_mode = False
         self.frame_1 = np.array([])
         self.frame_2 = np.array([])
+        self.all_angles = np.array([0, 0, 0, 0, 0])
         self.frame_width = 0
         self.frame_height = 0
         self.video_source = "./vids/avalanche_without_repose.avi"
@@ -391,6 +392,22 @@ class App(customtkinter.CTk):
 
                 self.labels[name].pack(side="bottom", fill="both", expand=True)
 
+                # if name == "frame_number":
+                #     self.progress_bars[name] = customtkinter.CTkProgressBar(
+                #         master=self.display_frame
+                #     )
+                #     self.progress_bars[name].pack(
+                #         side="bottom", fill="both", expand=True
+                #     )
+                #     self.progress_bars[name].set(0)
+
+                # self.labels[name] = customtkinter.CTkLabel(
+                #     master=self.display_frame,
+                #     text=self.widgets[name]["text"],
+                # )
+
+                self.labels[name].pack(side="bottom", fill="both", expand=True)
+
     def update_sliders(self):
         self.update_widget_parameters()
         for name in self.sliders:
@@ -504,6 +521,14 @@ class App(customtkinter.CTk):
         resized = cv2.resize(image, dim, interpolation=inter)
         return resized
 
+    def calculate_angle_values(self, input_array1, input_array2, total_array):
+        left, right = input_array1, input_array2
+        avg = (left + right) / 2
+        total_avg = np.average(total_array[3])
+        std_dev = np.std(total_array[2])
+        np.append(total_array, [left, right, avg, total_avg, std_dev])
+        return left, right, avg, total_avg, std_dev
+
     def refresh_image(self, val=0):
         if self.init == 1:
             self.initial_values()
@@ -511,15 +536,20 @@ class App(customtkinter.CTk):
             self.img = cv2.imread(self.file_path)
         else:
             self.img = self.vid.current_frame
-            percentage = self.vid.frame_number / self.vid.length
+            percentage = (self.vid.frame_number - 1) / (self.vid.length - 1)
             self.labels["percent_label"].configure(
-                text=f"Frame {int(self.vid.frame_number)}/{int(self.vid.length)}"
+                text=f"Frame: {int(self.vid.frame_number)}/{int(self.vid.length)}({percentage*100:.2f}%)"
             )
             self.progress_bars["percent_label"].set(percentage)
-
         self.update_params()
         self.save_params()
         angle_array, _, _ = self.CVapp.calculate_lines(self.img)
+        left, right, avg, total_avg, std_dev = self.calculate_angle_values(
+            angle_array[0], angle_array[1], self.all_angles
+        )
+        self.labels["angle_label"].configure(
+            text=f"Angles: {left:.1f}°-{right:.1f}° (avg: {avg:.1f}°, σ: {std_dev:.1f}°)"
+        )
         color_image = cv2.cvtColor(self.CVapp.current_frame, cv2.COLOR_BGR2RGB)
         canvas_width = self.image_canvas.cget("width")
         canvas_height = self.image_canvas.cget("height")
