@@ -488,7 +488,7 @@ class App(customtkinter.CTk):
         )
 
         self.file_path = tkinter.filedialog.askopenfilename(
-            title="Open a file", initialdir="./img", filetypes=filetypes
+            title="Open a file", initialdir="./vids", filetypes=filetypes
         )
         if self.file_path.endswith("mp4") or self.file_path.endswith("avi"):
             self.video_mode = True
@@ -523,10 +523,12 @@ class App(customtkinter.CTk):
 
     def calculate_angle_values(self, input_array1, input_array2, total_array):
         left, right = input_array1, input_array2
-        avg = (left + right) / 2
+        avg = (np.abs(left) + np.abs(right)) / 2
         total_avg = np.average(total_array[3])
+        print(total_array)
         std_dev = np.std(total_array[2])
-        np.append(total_array, [left, right, avg, total_avg, std_dev])
+        # total_array.append([left, right, avg, total_avg, std_dev])
+        # total_array = np.append(total_array, [left, right, avg, total_avg, std_dev])
         return left, right, avg, total_avg, std_dev
 
     def refresh_image(self, val=0):
@@ -546,6 +548,9 @@ class App(customtkinter.CTk):
         angle_array, _, _ = self.CVapp.calculate_lines(self.img)
         left, right, avg, total_avg, std_dev = self.calculate_angle_values(
             angle_array[0], angle_array[1], self.all_angles
+        )
+        self.all_angles = np.append(
+            self.all_angles, [left, right, avg, total_avg, std_dev]
         )
         self.labels["angle_label"].configure(
             text=f"Angles: {left:.1f}°-{right:.1f}° (avg: {avg:.1f}°, σ: {std_dev:.1f}°)"
