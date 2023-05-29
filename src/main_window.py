@@ -22,10 +22,10 @@ class MyVideoCapture:
         self.length = self.vid.get(cv2.CAP_PROP_FRAME_COUNT)
         self.imgs = []
         self.frame_number = 0
-        _, self.first_frame = self.get_frame()
+        _, self.first_frame = self.get_next_frame()
         self.current_frame = self.first_frame
 
-    def get_frame(self):
+    def get_next_frame(self):
         if self.vid.isOpened():
             ret, frame = self.vid.read()
             if ret:
@@ -41,7 +41,7 @@ class MyVideoCapture:
 
     def get_video(self):
         while True:
-            ret, frame = self.get_frame()
+            ret, frame = self.get_next_frame()
             if not ret:
                 break
             self.imgs.append(frame)
@@ -198,6 +198,7 @@ class App(customtkinter.CTk):
         self.video_source = "./vids/avalanche_without_repose.avi"
         self.vid = None
         self.widgets = {}
+        self.pause_vid = False
 
         with open("config/data.json", "r", encoding="UTF8") as fp:
             self.widgets = json.load(fp)
@@ -244,7 +245,7 @@ class App(customtkinter.CTk):
         self.action_buttons_commands = [
             self.next_frame,
             self.process_video,
-            self.refresh_image,
+            self.jump_to_frame,
             self.refresh_image,
         ]
 
@@ -524,9 +525,9 @@ class App(customtkinter.CTk):
     def calculate_angle_values(self, input_array1, input_array2, total_array):
         left, right = input_array1, input_array2
         avg = (np.abs(left) + np.abs(right)) / 2
-        total_avg = np.average(total_array[3])
+        total_avg = np.average(total_array[2])
         print(total_array)
-        std_dev = np.std(total_array[2])
+        std_dev = np.std(total_array[3])
         # total_array.append([left, right, avg, total_avg, std_dev])
         # total_array = np.append(total_array, [left, right, avg, total_avg, std_dev])
         return left, right, avg, total_avg, std_dev
@@ -536,6 +537,7 @@ class App(customtkinter.CTk):
             self.initial_values()
         if not self.video_mode:
             self.img = cv2.imread(self.file_path)
+            self.CVapp.current_frame = self.img
         else:
             self.img = self.vid.current_frame
             percentage = (self.vid.frame_number - 1) / (self.vid.length - 1)
@@ -552,6 +554,7 @@ class App(customtkinter.CTk):
         self.all_angles = np.append(
             self.all_angles, [left, right, avg, total_avg, std_dev]
         )
+        print(f"{self.all_angles[:-1]=}")
         self.labels["angle_label"].configure(
             text=f"Angles: {left:.1f}°-{right:.1f}° (avg: {avg:.1f}°, σ: {std_dev:.1f}°)"
         )
@@ -585,13 +588,16 @@ class App(customtkinter.CTk):
     #     else:
     #         return (ret, None)
 
+    def start_processing(self):
+        pass
+
     def process_video(self):
         # self.video_mode:
         # self.video_mode = True
         total_array = []
-        self.vid = MyVideoCapture(self.video_source)
-        while True:
-            ret, frame = self.vid.get_frame()
+        self.pause_vid = not self.pause_vid
+        while not self.pause_vid:
+            ret, frame = self.vid.get_next_frame()
             if not ret:
                 break
             self.frame_1 = frame
@@ -606,7 +612,12 @@ class App(customtkinter.CTk):
             # except:
             #     print("Could not obtain line")
         # self.video_mode = False
-        self.CVapp.save_to_csv(total_array, True)
+
+        self.CVapp.save_to_csv(total_array, True, name="exp3_agk_dist_phone_05_23")
+
+    def jump_to_frame(self):
+        self.vid.frame_number = self.vid.frame_number + 250
+        self.vid.vid.set(cv2.CAP_PROP_POS_FRAMES, self.vid.frame_number)
 
     def next_frame(self):
         self.update_sliders()
@@ -614,6 +625,7 @@ class App(customtkinter.CTk):
 
     def play_pause(self):
         print("play")
+        self.pause_vid = not self.pause_vid
 
     # def resizer(self, event):
     #     w, h = event.width - 100, event.height - 100

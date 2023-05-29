@@ -339,17 +339,21 @@ class AngleDetector:
         # xy_array = np.flip(xy_coords[:,0],xy_coords[:,1])
         # print(xy_coords)
         # print(np.shape(xy_coords))
-        vx, vy, x, y = cv2.fitLine(xy_coords, cv2.DIST_WELSCH, 0, 0.1, 0.1)
-        lefty = int(np.round((-x * vy / vx) + y))
-        righty = int(np.round(((np.size(src_edge_image, 1) - x) * vy / vx) + y))
-        point1 = (np.size(src_edge_image, 1) - 1, righty)
-        point2 = (0, lefty)
-        # print(f"{point1=}")
-        # print(f"{point2=}")
-        cv2.line(src_edge_image, point1, point2, (100, 255, 100), 3)
-        cv2.line(src_colour_image, point1, point2, (100, 255, 100), 3)
-        angle = self.get_angle_of_line(point2[1], point2[0], point1[1], point1[0])
-        # print(angle)
+        try:
+            vx, vy, x, y = cv2.fitLine(xy_coords, cv2.DIST_WELSCH, 0, 0.1, 0.1)
+            lefty = int(np.round((-x * vy / vx) + y))
+            righty = int(np.round(((np.size(src_edge_image, 1) - x) * vy / vx) + y))
+            point1 = (np.size(src_edge_image, 1) - 1, righty)
+            point2 = (0, lefty)
+            # print(f"{point1=}")
+            # print(f"{point2=}")
+            cv2.line(src_edge_image, point1, point2, (100, 255, 100), 3)
+            cv2.line(src_colour_image, point1, point2, (100, 255, 100), 3)
+            angle = self.get_angle_of_line(point2[1], point2[0], point1[1], point1[0])
+        except:
+            angle = 0
+            point1 = 0
+            point2 = 0
         return angle, [point1, point2]
 
     def split_img(self, src_image):
