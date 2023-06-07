@@ -68,7 +68,7 @@ class AngleDetector:
         return data_json
 
     def save_config(self, data_dict):
-        with open("config/data_save.json", "w") as fp:
+        with open("config/data.json", "w") as fp:
             json.dump(data_dict, fp, indent=4)
         print("Saved config!")
 
@@ -729,7 +729,7 @@ class AngleDetector:
         return [left_angle, right_angle], colour_image3, prev_frame
 
     def save_to_csv(
-        self, input_array, save, dir="test/", name=time.strftime("dem-%Y%m%d-%H%M%S")
+        self, input_array, save, dir="test", name=time.strftime("dem-%Y%m%d-%H%M%S")
     ):
         if save == True:
             csv_name = dir + name + ".csv"
@@ -802,7 +802,7 @@ class AngleDetector:
 
     def repose_calculation_from_video(self, path):
         global current_frame
-        dir = "data/"
+        dir = "data/exp"
         angle_array_full = []
         mode = 0
         try:

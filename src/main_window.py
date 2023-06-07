@@ -182,7 +182,7 @@ class App(customtkinter.CTk):
         self.display_frame = customtkinter.CTkFrame(
             self.navigation_frame, corner_radius=0, height=120
         )
-
+        self.total_array = []
         self.navigation_frame.pack(side="left", fill="both", expand=False)
         self.home_frame.pack(side="left", fill="both", expand=True)
         self.button_frame.pack(side="bottom", fill="y", expand=False)
@@ -196,6 +196,7 @@ class App(customtkinter.CTk):
         self.frame_width = 0
         self.frame_height = 0
         self.video_source = "./vids/avalanche_without_repose.avi"
+        self.file_name = "example"
         self.vid = None
         self.widgets = {}
         self.pause_vid = False
@@ -494,6 +495,7 @@ class App(customtkinter.CTk):
         if self.file_path.endswith("mp4") or self.file_path.endswith("avi"):
             self.video_mode = True
             self.video_source = self.file_path
+            self.file_name = self.file_path.split("/")[-1].split(".")[0]
             self.vid = MyVideoCapture(self.video_source)
             self.update_params()
             print("Video mode!")
@@ -502,6 +504,7 @@ class App(customtkinter.CTk):
             self.video_source = None
             self.frame_1 = cv2.imread(self.file_path)
             self.update_params()
+        self.total_array = []
         self.title(f"Slope Finder ({self.file_path})")
 
     def image_resize(self, image, width=None, height=None, inter=cv2.INTER_AREA):
@@ -526,7 +529,6 @@ class App(customtkinter.CTk):
         left, right = input_array1, input_array2
         avg = (np.abs(left) + np.abs(right)) / 2
         total_avg = np.average(total_array[2])
-        print(total_array)
         std_dev = np.std(total_array[3])
         # total_array.append([left, right, avg, total_avg, std_dev])
         # total_array = np.append(total_array, [left, right, avg, total_avg, std_dev])
@@ -554,7 +556,7 @@ class App(customtkinter.CTk):
         self.all_angles = np.append(
             self.all_angles, [left, right, avg, total_avg, std_dev]
         )
-        print(f"{self.all_angles[:-1]=}")
+        # print(f"{self.all_angles[:-1]=}")
         self.labels["angle_label"].configure(
             text=f"Angles: {left:.1f}°-{right:.1f}° (avg: {avg:.1f}°, σ: {std_dev:.1f}°)"
         )
@@ -577,7 +579,7 @@ class App(customtkinter.CTk):
 
     def update_frame_size(self):
         frame_dim = np.shape(self.img)
-        print(f"{frame_dim=}")
+        # print(f"{frame_dim=}")
         self.frame_width = frame_dim[1]
         self.frame_height = frame_dim[0]
 
@@ -594,7 +596,7 @@ class App(customtkinter.CTk):
     def process_video(self):
         # self.video_mode:
         # self.video_mode = True
-        total_array = []
+
         self.pause_vid = not self.pause_vid
         while not self.pause_vid:
             ret, frame = self.vid.get_next_frame()
@@ -602,7 +604,7 @@ class App(customtkinter.CTk):
                 break
             self.frame_1 = frame
             current_angles = self.refresh_image()
-            total_array.append(current_angles)
+            self.total_array.append(current_angles)
             self.update()
             # angle_array.append(np.mean(np.abs(angle_array)))
             # writer.writerow(angle_array)
@@ -613,7 +615,9 @@ class App(customtkinter.CTk):
             #     print("Could not obtain line")
         # self.video_mode = False
 
-        self.CVapp.save_to_csv(total_array, True, name="exp3_agk_dist_phone_05_23")
+        self.CVapp.save_to_csv(
+            self.total_array, True, dir="data/exp/", name=str(self.file_name)
+        )
 
     def jump_to_frame(self):
         self.vid.frame_number = self.vid.frame_number + 250
@@ -668,5 +672,7 @@ class App(customtkinter.CTk):
 
 
 if __name__ == "__main__":
+    import cProfile
+
     app = App()
-    app.mainloop()
+    cProfile.run("app.mainloop()", "profiling_output.dat")
