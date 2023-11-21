@@ -604,6 +604,7 @@ class App(customtkinter.CTk):
                 break
             self.frame_1 = frame
             current_angles = self.refresh_image()
+            current_angles.insert(0, self.vid.frame_number)
             self.total_array.append(current_angles)
             self.update()
             # angle_array.append(np.mean(np.abs(angle_array)))
@@ -614,9 +615,11 @@ class App(customtkinter.CTk):
             # except:
             #     print("Could not obtain line")
         # self.video_mode = False
-
         self.CVapp.save_to_csv(
-            self.total_array, True, dir="data/exp/", name=str(self.file_name)
+            self.total_array,
+            True,
+            dir="data/2023/",
+            name=str(self.file_name),
         )
 
     def jump_to_frame(self):

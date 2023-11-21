@@ -55,6 +55,7 @@ class AngleDetector:
         self.left_boundary = config["left_boundary"]["value"]
         self.right_boundary = config["right_boundary"]["value"]
         self.middle_line_position = config["middle_line_position"]["value"]
+        self.middle_thickness = config["middle_thickness"]["value"]
         self.hsv_hue_bottom = config["hsv_hue_bottom"]["value"]
         self.hsv_hue_top = config["hsv_hue_top"]["value"]
         self.hsv_saturation_bottom = config["hsv_saturation_bottom"]["value"]
@@ -291,6 +292,22 @@ class AngleDetector:
             (255, 50, 255),
             3,
         )
+
+        cv2.line(
+            src_image,
+            (self.middle_line_position + self.middle_thickness, self.top_boundary),
+            (self.middle_line_position + self.middle_thickness, self.bottom_boundary),
+            (255, 50, 200),
+            1,
+        )
+
+        cv2.line(
+            src_image,
+            (self.middle_line_position - self.middle_thickness, self.top_boundary),
+            (self.middle_line_position - self.middle_thickness, self.bottom_boundary),
+            (255, 50, 200),
+            1,
+        )
         return src_image
 
     def draw_angled_lines(self, src_edge_image, dst_colour_image, src_array):
@@ -361,11 +378,11 @@ class AngleDetector:
         # global middle_line_position
         left_crop = src_image[
             self.top_boundary : self.bottom_boundary,
-            self.left_boundary : self.middle_line_position,
+            self.left_boundary : self.middle_line_position - self.middle_thickness,
         ]
         right_crop = src_image[
             self.top_boundary : self.bottom_boundary,
-            self.middle_line_position : self.right_boundary,
+            self.middle_line_position + self.middle_thickness : self.right_boundary,
         ]
         return left_crop, right_crop
 
@@ -376,8 +393,8 @@ class AngleDetector:
     def write_angles_on_img(self, src_array2, src_img2):
         src_array = np.copy(src_array2)
         src_img = np.copy(src_img2)
-        text_right = f"Right slope mean: {src_array[0]:.2f}"
-        text_left = f"Left slope mean: {src_array[1]:.2f}"
+        text_right = f"Right slope mean: {src_array[1]:.2f}"
+        text_left = f"Left slope mean: {-src_array[0]:.2f}"
 
         mean_value = (abs(src_array[0]) + abs(src_array[1])) / 2
         text_middle = f"{mean_value:.2f}"
@@ -389,7 +406,7 @@ class AngleDetector:
             text_left,
             (0 + move_horiz, src_img.shape[0] - 50 + move_up),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.75,
+            1.0,
             (0, 0, 0),
             lineType=cv2.LINE_AA,
             thickness=3,
@@ -399,7 +416,7 @@ class AngleDetector:
             text_right,
             (0 + move_horiz, src_img.shape[0] - 25 + move_up),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.75,
+            1.0,
             (0, 0, 0),
             lineType=cv2.LINE_AA,
             thickness=3,
@@ -644,6 +661,7 @@ class AngleDetector:
         self.left_boundary = self.data_json["left_boundary"]["value"]
         self.right_boundary = self.data_json["right_boundary"]["value"]
         self.middle_line_position = self.data_json["middle_line_position"]["value"]
+        self.middle_thickness = self.data_json["middle_thickness"]["value"]
         self.hsv_hue_bottom = self.data_json["hsv_hue_bottom"]["value"]
         self.hsv_hue_top = self.data_json["hsv_hue_top"]["value"]
         self.hsv_saturation_bottom = self.data_json["hsv_saturation_bottom"]["value"]
@@ -1052,6 +1070,8 @@ class AngleDetector:
         self.data_json["right_boundary"]["value"] = self.right_boundary
 
         self.data_json["middle_line_position"]["value"] = self.middle_line_position
+        self.data_json["middle_thickness"]["value"] = self.middle_thickness
+
         self.data_json["hsv_hue_bottom"]["value"] = self.hsv_hue_bottom
         self.data_json["hsv_hue_top"]["value"] = self.hsv_hue_top
         self.data_json["hsv_saturation_bottom"]["value"] = self.hsv_saturation_bottom
