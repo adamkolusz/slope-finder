@@ -12,7 +12,6 @@ import time
 
 class MyVideoCapture:
     def __init__(self, video_source=0):
-        # Open the video source
         self.vid = cv2.VideoCapture(video_source)
         if not self.vid.isOpened():
             raise ValueError("Unable to open video source", video_source)
@@ -20,16 +19,19 @@ class MyVideoCapture:
         # Get video source width and height
         self.width = self.vid.get(cv2.CAP_PROP_FRAME_WIDTH)
         self.height = self.vid.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        self.length = self.vid.get(cv2.CAP_PROP_FRAME_COUNT)
         self.imgs = []
-        _, self.first_frame = self.get_frame()
+        self.frame_number = 0
+        _, self.first_frame = self.get_next_frame()
         self.current_frame = self.first_frame
 
-    def get_frame(self):
+    def get_next_frame(self):
         if self.vid.isOpened():
             ret, frame = self.vid.read()
             if ret:
                 rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 self.current_frame = rgb_frame
+                self.frame_number += 1
                 # Return a boolean success flag and the current frame converted to BGR
                 return (ret, rgb_frame)
             else:
@@ -39,7 +41,7 @@ class MyVideoCapture:
 
     def get_video(self):
         while True:
-            ret, frame = self.get_frame()
+            ret, frame = self.get_next_frame()
             if not ret:
                 break
             self.imgs.append(frame)
@@ -155,6 +157,7 @@ class App(customtkinter.CTk):
         self.homeStyle = GridSettings(0, 0, 0, 0, None, 50, 25, 5, 5, 10, 10, "nswe")
         self.tabStyle = GridSettings(0, 0, 1, 1, None, 50, 25, 0, 0, 10, 10, "nswe")
         self.labelStyle = GridSettings(0, 0, 0, 0, None, 50, 25, 0, 0, 0, 0, "nsew")
+        self.scrollStyle = GridSettings(0, 0, 1, 1, None, 250, 500, 5, 5, 5, 5, "ew")
         self.sliderStyle = GridSettings(0, 0, 0, 0, None, 50, 25, 0, 0, 0, 00, "nsw")
         self.entryStyle = GridSettings(0, 0, 0, 0, None, 50, 25, 0, 0, 0, 0, "nsw")
         self.buttonStyle = GridSettings(0, 0, 2, 0, None, 50, 25, 5, 5, 5, 5, "ns")
@@ -172,29 +175,31 @@ class App(customtkinter.CTk):
             sticky=self.frameStyle.sticky,
         )
 
-        # self.navigation_frame.grid_rowconfigure(0, weight=1)
-        # self.navigation_frame.grid_columnconfigure(0, weight=1)
-
         self.home_frame = customtkinter.CTkFrame(self, corner_radius=0)
         self.button_frame = customtkinter.CTkFrame(
             self.navigation_frame, corner_radius=0, height=120
         )
-        # self.home_frame.grid(row=0, column=1, sticky="nw")
-
-        # self.home_frame.grid_rowconfigure(0, weight=1)
-        # self.home_frame.grid_columnconfigure(0, weight=1)
+        self.display_frame = customtkinter.CTkFrame(
+            self.navigation_frame, corner_radius=0, height=120
+        )
+        self.total_array = []
         self.navigation_frame.pack(side="left", fill="both", expand=False)
         self.home_frame.pack(side="left", fill="both", expand=True)
         self.button_frame.pack(side="bottom", fill="y", expand=False)
+        self.display_frame.pack(side="bottom", fill="both", expand=False)
+
         self.tab_name_lst = ["Options", "Filter", "Position"]
         self.video_mode = False
         self.frame_1 = np.array([])
         self.frame_2 = np.array([])
+        self.all_angles = np.array([0, 0, 0, 0, 0])
         self.frame_width = 0
         self.frame_height = 0
         self.video_source = "./vids/avalanche_without_repose.avi"
+        self.file_name = "example"
         self.vid = None
         self.widgets = {}
+        self.pause_vid = False
 
         with open("config/data.json", "r", encoding="UTF8") as fp:
             self.widgets = json.load(fp)
@@ -214,41 +219,48 @@ class App(customtkinter.CTk):
         self.scrollable_frame = customtkinter.CTkScrollableFrame(
             master=self.navigation_frame, width=300, height=200
         )
-        # self.scrollable_frame.grid(row=0, column=0, sticky="nsew")
-        self.scrollable_frame.pack(side="left", fill="both", expand=True)
-        self.tabview = customtkinter.CTkTabview(self.scrollable_frame)
-        self.tabview.grid(
-            row=self.tabStyle.row,
-            column=self.tabStyle.column,
-            rowspan=self.tabStyle.rowspan,
-            ipadx=self.tabStyle.ipadx,
-            ipady=self.tabStyle.ipady,
-            padx=self.tabStyle.padx,
-            pady=self.tabStyle.pady,
-            sticky=self.tabStyle.sticky,
-        )
+        self.tabview = customtkinter.CTkTabview(self.navigation_frame)
+        self.tabview.pack(side="left", fill="both", expand=True)
+        self.scrollable_frames = {}
 
-        # self.tabview.grid_rowconfigure(1, weight=1)
-        # self.tabview.grid_columnconfigure(1, weight=1)
-        for name in self.tab_name_lst:
+        for i, name in enumerate(self.tab_name_lst):
             self.tabview.add(name)
+            self.scrollable_frames[i] = customtkinter.CTkScrollableFrame(
+                master=self.tabview.tab(name),
+                width=self.scrollStyle.width,
+                height=self.scrollStyle.height,
+            )
+            self.scrollable_frames[i].pack(side="left", fill="both", expand=True)
 
-        self.tabview.set(self.tab_name_lst[1])
+        self.tabview.set(self.tab_name_lst[0])
 
         self.labels = {}
         self.sliders = {}
         self.entries = {}
         self.buttons = {}
         self.action_buttons = {}
+        self.progress_bars = {}
 
         self.file_path = "./img/piv/piv2.png"
+        self.file_paths = tuple(
+            "./img/piv/piv2.png",
+        )
 
-        self.action_commands = [
+        self.action_buttons_commands = [
             self.next_frame,
             self.process_video,
+            self.jump_to_frame,
             self.refresh_image,
-            self.refresh_image,
+            self.process_multiple_files,
         ]
+
+        self.menu_buttons_commands = [
+            self.select_files,
+            self.save_file,
+            self.load_config,
+            self.save_config,
+        ]
+
         self.img_refs = []
         self.init_widgets()
 
@@ -280,16 +292,23 @@ class App(customtkinter.CTk):
 
         self.CVapp = angle_detector.AngleDetector()
         self.CVapp.load_config()
-        # CVapp.main()
+
+    def save_file(self):
+        pass
+
+    def load_config(self):
+        pass
+
+    def save_config(self):
+        pass
 
     def init_widgets(self):
         action_ctr = 0
+        menu_btn_ctr = 0
         for i, name in enumerate(self.widgets):
             if self.widgets[name]["type"] == "slider":
                 self.labels[name] = customtkinter.CTkLabel(
-                    master=self.tabview.tab(
-                        self.tab_name_lst[self.widgets[name]["tab"]]
-                    ),
+                    master=self.scrollable_frames[self.widgets[name]["tab"]],
                     text=self.widgets[name]["text"],
                 )
 
@@ -303,9 +322,7 @@ class App(customtkinter.CTk):
                 )
 
                 self.sliders[name] = customtkinter.CTkSlider(
-                    master=self.tabview.tab(
-                        self.tab_name_lst[self.widgets[name]["tab"]]
-                    ),
+                    master=self.scrollable_frames[self.widgets[name]["tab"]],
                     from_=self.widgets[name]["min"],
                     to=self.widgets[name]["max"],
                     number_of_steps=self.widgets[name]["step"],
@@ -318,9 +335,7 @@ class App(customtkinter.CTk):
                 )
 
                 self.entries[name] = customtkinter.CTkEntry(
-                    master=self.tabview.tab(
-                        self.tab_name_lst[self.widgets[name]["tab"]]
-                    ),
+                    master=self.scrollable_frames[self.widgets[name]["tab"]],
                     placeholder_text="CTkEntry",
                     textvariable=self.tst_lst[name],
                     width=self.entryStyle.width,
@@ -340,13 +355,11 @@ class App(customtkinter.CTk):
                 and self.widgets[name]["tab"] != 10
             ):
                 self.buttons[name] = customtkinter.CTkButton(
-                    master=self.tabview.tab(
-                        self.tab_name_lst[self.widgets[name]["tab"]]
-                    ),
+                    master=self.scrollable_frames[self.widgets[name]["tab"]],
                     width=self.buttonStyle.width,
                     height=self.buttonStyle.height,
                     text=self.widgets[name]["text"],
-                    command=self.select_file,
+                    command=self.menu_buttons_commands[menu_btn_ctr],
                 )
                 # Union[Callable[[], None], None]
                 self.buttons[name].grid(
@@ -357,19 +370,49 @@ class App(customtkinter.CTk):
                     sticky=self.buttonStyle.sticky,
                     columnspan=self.buttonStyle.columnspan,
                 )
-            elif (
-                self.widgets[name]["type"] == "button"
-                and self.widgets[name]["tab"] == 10
-            ):
+                menu_btn_ctr += 1
+            elif self.widgets[name]["type"] == "action_button":
                 self.action_buttons[name] = customtkinter.CTkButton(
                     master=self.button_frame,
                     text=str(self.widgets[name]["text"]),
                     width=self.actionButtonStyle.width,
                     height=self.actionButtonStyle.height,
-                    command=self.action_commands[action_ctr],
+                    command=self.action_buttons_commands[action_ctr],
                 )
                 action_ctr += 1
                 self.action_buttons[name].pack(side="left", fill="both", expand=True)
+            elif self.widgets[name]["type"] == "display_label":
+                if name == "percent_label":
+                    self.progress_bars[name] = customtkinter.CTkProgressBar(
+                        master=self.display_frame
+                    )
+                    self.progress_bars[name].pack(
+                        side="bottom", fill="both", expand=True
+                    )
+                    self.progress_bars[name].set(0)
+
+                self.labels[name] = customtkinter.CTkLabel(
+                    master=self.display_frame,
+                    text=self.widgets[name]["text"],
+                )
+
+                self.labels[name].pack(side="bottom", fill="both", expand=True)
+
+                # if name == "frame_number":
+                #     self.progress_bars[name] = customtkinter.CTkProgressBar(
+                #         master=self.display_frame
+                #     )
+                #     self.progress_bars[name].pack(
+                #         side="bottom", fill="both", expand=True
+                #     )
+                #     self.progress_bars[name].set(0)
+
+                # self.labels[name] = customtkinter.CTkLabel(
+                #     master=self.display_frame,
+                #     text=self.widgets[name]["text"],
+                # )
+
+                self.labels[name].pack(side="bottom", fill="both", expand=True)
 
     def update_sliders(self):
         self.update_widget_parameters()
@@ -423,6 +466,15 @@ class App(customtkinter.CTk):
         # print("EEEEEEEEEEEEE", self.widgets)
         # self.CVapp.top_boundary = 120
 
+    def process_multiple_files(self):
+        selected_files = self.select_files()
+        print(selected_files)
+        for file_path in selected_files:
+            print(file_path)
+            self.set_mode(file_path)
+            self.process_video()
+            time.sleep(1)
+
     def update_frames(self):
         if self.video_mode:
             cap = cv2.VideoCapture(self.file_path)
@@ -441,21 +493,59 @@ class App(customtkinter.CTk):
         else:
             self.frame_1 = cv2.imread(self.file_path)
 
-    def select_file(self):
+    def select_files(self):
         filetypes = (
+            ("All files", "*.*"),
             ("png", "*.png"),
             ("tiff", "*.tiff"),
             ("mp4", "*.mp4"),
             ("avi", "*.avi"),
-            ("All files", "*.*"),
         )
 
-        self.file_path = tkinter.filedialog.askopenfilename(
-            title="Open a file", initialdir="./img", filetypes=filetypes
+        file_paths = tkinter.filedialog.askopenfilenames(
+            title="Open files",
+            initialdir="C:/Users/adamk/Downloads/OneDrive_1_09-01-2024/",
+            filetypes=filetypes,
         )
+
+        return file_paths
+
+    def set_mode(self, file_path):
+        if file_path.endswith("mp4") or file_path.endswith("avi"):
+            self.video_mode = True
+            self.video_source = file_path
+            self.file_name = file_path.split("/")[-1].split(".")[0]
+            self.vid = MyVideoCapture(self.video_source)
+            self.update_params()
+            print("Video mode!")
+        else:
+            self.video_mode = False
+            self.video_source = None
+            self.frame_1 = cv2.imread(file_path)
+            self.update_params()
+
+        # self.total_array = []
+        self.title(f"Slope Finder ({file_path})")
+
+    def select_file(self):
+        filetypes = (
+            ("All files", "*.*"),
+            ("png", "*.png"),
+            ("tiff", "*.tiff"),
+            ("mp4", "*.mp4"),
+            ("avi", "*.avi"),
+        )
+
+        self.file_paths = tkinter.filedialog.askopenfilename(
+            title="Open a file",
+            initialdir="C:/Users/adamk/Downloads/OneDrive_1_09-01-2024/",
+            filetypes=filetypes,
+        )
+
         if self.file_path.endswith("mp4") or self.file_path.endswith("avi"):
             self.video_mode = True
             self.video_source = self.file_path
+            self.file_name = self.file_path.split("/")[-1].split(".")[0]
             self.vid = MyVideoCapture(self.video_source)
             self.update_params()
             print("Video mode!")
@@ -464,6 +554,7 @@ class App(customtkinter.CTk):
             self.video_source = None
             self.frame_1 = cv2.imread(self.file_path)
             self.update_params()
+        # self.total_array = []
         self.title(f"Slope Finder ({self.file_path})")
 
     def image_resize(self, image, width=None, height=None, inter=cv2.INTER_AREA):
@@ -484,21 +575,44 @@ class App(customtkinter.CTk):
         resized = cv2.resize(image, dim, interpolation=inter)
         return resized
 
+    def calculate_angle_values(self, input_array1, input_array2, total_array):
+        left, right = input_array1, input_array2
+        avg = (np.abs(left) + np.abs(right)) / 2
+        total_avg = np.average(total_array[2])
+        std_dev = np.std(total_array[3])
+        # total_array.append([left, right, avg, total_avg, std_dev])
+        # total_array = np.append(total_array, [left, right, avg, total_avg, std_dev])
+        return left, right, avg, total_avg, std_dev
+
     def refresh_image(self, val=0):
         if self.init == 1:
             self.initial_values()
         if not self.video_mode:
             self.img = cv2.imread(self.file_path)
+            self.CVapp.current_frame = self.img
         else:
             self.img = self.vid.current_frame
-
+            percentage = (self.vid.frame_number - 1) / (self.vid.length - 1)
+            self.labels["percent_label"].configure(
+                text=f"Frame: {int(self.vid.frame_number)}/{int(self.vid.length)}({percentage*100:.2f}%)"
+            )
+            self.progress_bars["percent_label"].set(percentage)
         self.update_params()
         self.save_params()
-        self.CVapp.calculate_lines(self.img)
+        angle_array, _, _ = self.CVapp.calculate_lines(self.img)
+        left, right, avg, total_avg, std_dev = self.calculate_angle_values(
+            angle_array[0], angle_array[1], self.all_angles
+        )
+        self.all_angles = np.append(
+            self.all_angles, [left, right, avg, total_avg, std_dev]
+        )
+        # print(f"{self.all_angles[:-1]=}")
+        self.labels["angle_label"].configure(
+            text=f"Angles: {left:.1f}°-{right:.1f}° (avg: {avg:.1f}°, σ: {std_dev:.1f}°)"
+        )
         color_image = cv2.cvtColor(self.CVapp.current_frame, cv2.COLOR_BGR2RGB)
         canvas_width = self.image_canvas.cget("width")
         canvas_height = self.image_canvas.cget("height")
-        print(np.shape(self.img))
         frame_size = np.shape(self.img)
         if frame_size[1] > frame_size[0]:
             resized = self.image_resize(image=color_image, width=int(canvas_width))
@@ -511,10 +625,11 @@ class App(customtkinter.CTk):
         test_id = self.image_canvas.itemconfig(
             self.image_id, image=self.image_canvas.imgref
         )
+        return angle_array
 
     def update_frame_size(self):
         frame_dim = np.shape(self.img)
-        print(f"{frame_dim=}")
+        # print(f"{frame_dim=}")
         self.frame_width = frame_dim[1]
         self.frame_height = frame_dim[0]
 
@@ -525,16 +640,24 @@ class App(customtkinter.CTk):
     #     else:
     #         return (ret, None)
 
+    def start_processing(self):
+        pass
+
     def process_video(self):
         # self.video_mode:
         # self.video_mode = True
-        self.vid = MyVideoCapture(self.video_source)
-        while True:
-            ret, frame = self.vid.get_frame()
+
+        # self.pause_vid = not self.pause_vid
+        self.pause_vid = False
+        self.total_array = []
+        while not self.pause_vid:
+            ret, frame = self.vid.get_next_frame()
             if not ret:
                 break
             self.frame_1 = frame
-            self.refresh_image()
+            current_angles = self.refresh_image()
+            current_angles.insert(0, self.vid.frame_number)
+            self.total_array.append(current_angles)
             self.update()
             # angle_array.append(np.mean(np.abs(angle_array)))
             # writer.writerow(angle_array)
@@ -544,6 +667,16 @@ class App(customtkinter.CTk):
             # except:
             #     print("Could not obtain line")
         # self.video_mode = False
+        self.CVapp.save_to_csv(
+            self.total_array,
+            True,
+            dir="data/2024/",
+            name=str(self.file_name),
+        )
+
+    def jump_to_frame(self):
+        self.vid.frame_number = self.vid.frame_number + 250
+        self.vid.vid.set(cv2.CAP_PROP_POS_FRAMES, self.vid.frame_number)
 
     def next_frame(self):
         self.update_sliders()
@@ -551,6 +684,7 @@ class App(customtkinter.CTk):
 
     def play_pause(self):
         print("play")
+        self.pause_vid = not self.pause_vid
 
     # def resizer(self, event):
     #     w, h = event.width - 100, event.height - 100
@@ -593,5 +727,7 @@ class App(customtkinter.CTk):
 
 
 if __name__ == "__main__":
+    import cProfile
+
     app = App()
-    app.mainloop()
+    cProfile.run("app.mainloop()", "profiling_output.dat")

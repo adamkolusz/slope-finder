@@ -2,11 +2,11 @@
     "bottom_boundary": {
         "text": "bottom_boundary",
         "int": 1,
-        "max": 699,
+        "max": 1000,
         "min": 0,
-        "step": 699,
+        "step": 1000,
         "tab": 2,
-        "value": 442,
+        "value": 1657,
         "type": "slider"
     },
     "current_image_mode": {
@@ -26,7 +26,7 @@
         "min": 0,
         "step": 500,
         "tab": 1,
-        "value": 202,
+        "value": 52,
         "type": "slider"
     },
     "hsv_hue_bottom": {
@@ -46,7 +46,7 @@
         "min": 0,
         "step": 255,
         "tab": 1,
-        "value": 255,
+        "value": 130,
         "type": "slider"
     },
     "hsv_saturation_bottom": {
@@ -66,7 +66,7 @@
         "min": 0,
         "step": 255,
         "tab": 1,
-        "value": 24,
+        "value": 255,
         "type": "slider"
     },
     "hsv_value_bottom": {
@@ -76,7 +76,7 @@
         "min": 0,
         "step": 255,
         "tab": 1,
-        "value": 214,
+        "value": 0,
         "type": "slider"
     },
     "hsv_value_top": {
@@ -102,11 +102,11 @@
     "left_boundary": {
         "text": "left_boundary",
         "int": 1,
-        "max": 1059,
+        "max": 1200,
         "min": 0,
-        "step": 1059,
+        "step": 1200,
         "tab": 2,
-        "value": 275,
+        "value": 194,
         "type": "slider"
     },
     "low_threshold": {
@@ -116,7 +116,7 @@
         "min": 0,
         "step": 500,
         "tab": 1,
-        "value": 48,
+        "value": 10,
         "type": "slider"
     },
     "max_line_gap": {
@@ -132,21 +132,11 @@
     "middle_line_position": {
         "text": "middle_line_position",
         "int": 1,
-        "max": 1059,
+        "max": 1200,
         "min": 0,
-        "step": 1059,
+        "step": 1200,
         "tab": 2,
-        "value": 528,
-        "type": "slider"
-    },
-    "middle_thickness": {
-        "text": "middle_thickness",
-        "int": 1,
-        "max": 1080,
-        "min": 0,
-        "step": 1080,
-        "tab": 2,
-        "value": 43,
+        "value": 1100,
         "type": "slider"
     },
     "min_line_length": {
@@ -172,11 +162,11 @@
     "right_boundary": {
         "text": "right_boundary",
         "int": 1,
-        "max": 1059,
+        "max": 1200,
         "min": 0,
-        "step": 1059,
+        "step": 1200,
         "tab": 2,
-        "value": 787,
+        "value": 1914,
         "type": "slider"
     },
     "scale_percent": {
@@ -186,7 +176,7 @@
         "min": 0,
         "step": 100,
         "tab": 2,
-        "value": 115,
+        "value": 76,
         "type": "slider"
     },
     "theta": {
@@ -212,11 +202,11 @@
     "top_boundary": {
         "text": "top_boundary",
         "int": 1,
-        "max": 699,
+        "max": 1000,
         "min": 0,
-        "step": 699,
+        "step": 1000,
         "tab": 2,
-        "value": 168,
+        "value": 1000,
         "type": "slider"
     },
     "line_visibility": {
@@ -256,41 +246,11 @@
         "min": 0,
         "step": 3,
         "tab": 0,
-        "value": 0,
+        "value": "0",
         "type": "slider"
     },
     "open_file": {
-        "text": "Open file",
-        "int": 0,
-        "max": 0,
-        "min": 0,
-        "step": 0,
-        "tab": 0,
-        "value": "0",
-        "type": "button"
-    },
-    "save_file": {
-        "text": "Save file",
-        "int": 0,
-        "max": 0,
-        "min": 0,
-        "step": 0,
-        "tab": 0,
-        "value": "0",
-        "type": "button"
-    },
-    "load_config": {
-        "text": "Load config",
-        "int": 0,
-        "max": 0,
-        "min": 0,
-        "step": 0,
-        "tab": 0,
-        "value": "0",
-        "type": "button"
-    },
-    "save_config": {
-        "text": "Save config",
+        "text": "open_file",
         "int": 0,
         "max": 0,
         "min": 0,
@@ -307,7 +267,7 @@
         "step": 0,
         "tab": 10,
         "value": "0",
-        "type": "action_button"
+        "type": "button"
     },
     "play_button": {
         "text": "\u23ef\ufe0e",
@@ -317,7 +277,7 @@
         "step": 0,
         "tab": 10,
         "value": "0",
-        "type": "action_button"
+        "type": "button"
     },
     "next_button": {
         "text": "\u23e9\ufe0e",
@@ -327,7 +287,7 @@
         "step": 0,
         "tab": 10,
         "value": "0",
-        "type": "action_button"
+        "type": "button"
     },
     "refresh_button": {
         "text": "\u21ba",
@@ -337,36 +297,6 @@
         "step": 0,
         "tab": 10,
         "value": "0",
-        "type": "action_button"
-    },
-    "process_multiple_files": {
-        "text": "MTPL",
-        "int": 0,
-        "max": 0,
-        "min": 0,
-        "step": 0,
-        "tab": 10,
-        "value": "0",
-        "type": "action_button"
-    },
-    "percent_label": {
-        "text": "Frame: 1/1(100%)",
-        "int": 0,
-        "max": 0,
-        "min": 0,
-        "step": 0,
-        "tab": 11,
-        "value": "0",
-        "type": "display_label"
-    },
-    "angle_label": {
-        "text": "Angles: 0\u00b0-0\u00b0 (avg: 0\u00b0, \u03c3: 0\u00b0)",
-        "int": 0,
-        "max": 0,
-        "min": 0,
-        "step": 0,
-        "tab": 11,
-        "value": "0",
-        "type": "display_label"
+        "type": "button"
     }
 }

@@ -55,6 +55,7 @@ class AngleDetector:
         self.left_boundary = config["left_boundary"]["value"]
         self.right_boundary = config["right_boundary"]["value"]
         self.middle_line_position = config["middle_line_position"]["value"]
+        self.middle_thickness = config["middle_thickness"]["value"]
         self.hsv_hue_bottom = config["hsv_hue_bottom"]["value"]
         self.hsv_hue_top = config["hsv_hue_top"]["value"]
         self.hsv_saturation_bottom = config["hsv_saturation_bottom"]["value"]
@@ -68,8 +69,9 @@ class AngleDetector:
         return data_json
 
     def save_config(self, data_dict):
-        with open("config/data_save.json", "w") as fp:
+        with open("config/data.json", "w") as fp:
             json.dump(data_dict, fp, indent=4)
+        print("Saved config!")
 
     def refresh_view(self):
         try:
@@ -290,6 +292,22 @@ class AngleDetector:
             (255, 50, 255),
             3,
         )
+
+        cv2.line(
+            src_image,
+            (self.middle_line_position + self.middle_thickness, self.top_boundary),
+            (self.middle_line_position + self.middle_thickness, self.bottom_boundary),
+            (255, 50, 200),
+            1,
+        )
+
+        cv2.line(
+            src_image,
+            (self.middle_line_position - self.middle_thickness, self.top_boundary),
+            (self.middle_line_position - self.middle_thickness, self.bottom_boundary),
+            (255, 50, 200),
+            1,
+        )
         return src_image
 
     def draw_angled_lines(self, src_edge_image, dst_colour_image, src_array):
@@ -338,17 +356,21 @@ class AngleDetector:
         # xy_array = np.flip(xy_coords[:,0],xy_coords[:,1])
         # print(xy_coords)
         # print(np.shape(xy_coords))
-        vx, vy, x, y = cv2.fitLine(xy_coords, cv2.DIST_WELSCH, 0, 0.1, 0.1)
-        lefty = int(np.round((-x * vy / vx) + y))
-        righty = int(np.round(((np.size(src_edge_image, 1) - x) * vy / vx) + y))
-        point1 = (np.size(src_edge_image, 1) - 1, righty)
-        point2 = (0, lefty)
-        # print(f"{point1=}")
-        # print(f"{point2=}")
-        cv2.line(src_edge_image, point1, point2, (100, 255, 100), 3)
-        cv2.line(src_colour_image, point1, point2, (100, 255, 100), 3)
-        angle = self.get_angle_of_line(point2[1], point2[0], point1[1], point1[0])
-        # print(angle)
+        try:
+            vx, vy, x, y = cv2.fitLine(xy_coords, cv2.DIST_WELSCH, 0, 0.1, 0.1)
+            lefty = int(np.round((-x * vy / vx) + y))
+            righty = int(np.round(((np.size(src_edge_image, 1) - x) * vy / vx) + y))
+            point1 = (np.size(src_edge_image, 1) - 1, righty)
+            point2 = (0, lefty)
+            # print(f"{point1=}")
+            # print(f"{point2=}")
+            cv2.line(src_edge_image, point1, point2, (100, 255, 100), 3)
+            cv2.line(src_colour_image, point1, point2, (100, 255, 100), 3)
+            angle = self.get_angle_of_line(point2[1], point2[0], point1[1], point1[0])
+        except:
+            angle = 0
+            point1 = 0
+            point2 = 0
         return angle, [point1, point2]
 
     def split_img(self, src_image):
@@ -356,11 +378,11 @@ class AngleDetector:
         # global middle_line_position
         left_crop = src_image[
             self.top_boundary : self.bottom_boundary,
-            self.left_boundary : self.middle_line_position,
+            self.left_boundary : self.middle_line_position - self.middle_thickness,
         ]
         right_crop = src_image[
             self.top_boundary : self.bottom_boundary,
-            self.middle_line_position : self.right_boundary,
+            self.middle_line_position + self.middle_thickness : self.right_boundary,
         ]
         return left_crop, right_crop
 
@@ -371,8 +393,8 @@ class AngleDetector:
     def write_angles_on_img(self, src_array2, src_img2):
         src_array = np.copy(src_array2)
         src_img = np.copy(src_img2)
-        text_right = f"Right slope mean: {src_array[0]:.2f}"
-        text_left = f"Left slope mean: {src_array[1]:.2f}"
+        text_right = f"Right slope mean: {src_array[1]:.2f}"
+        text_left = f"Left slope mean: {-src_array[0]:.2f}"
 
         mean_value = (abs(src_array[0]) + abs(src_array[1])) / 2
         text_middle = f"{mean_value:.2f}"
@@ -384,7 +406,7 @@ class AngleDetector:
             text_left,
             (0 + move_horiz, src_img.shape[0] - 50 + move_up),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.75,
+            1.0,
             (0, 0, 0),
             lineType=cv2.LINE_AA,
             thickness=3,
@@ -394,7 +416,7 @@ class AngleDetector:
             text_right,
             (0 + move_horiz, src_img.shape[0] - 25 + move_up),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.75,
+            1.0,
             (0, 0, 0),
             lineType=cv2.LINE_AA,
             thickness=3,
@@ -415,7 +437,7 @@ class AngleDetector:
             text_left,
             (0 + move_horiz, src_img.shape[0] - 50 + move_up),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.75,
+            1,
             (255, 255, 255),
             lineType=cv2.LINE_AA,
             thickness=1,
@@ -425,7 +447,7 @@ class AngleDetector:
             text_right,
             (0 + move_horiz, src_img.shape[0] - 25 + move_up),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.75,
+            1,
             (255, 255, 255),
             lineType=cv2.LINE_AA,
             thickness=1,
@@ -639,6 +661,7 @@ class AngleDetector:
         self.left_boundary = self.data_json["left_boundary"]["value"]
         self.right_boundary = self.data_json["right_boundary"]["value"]
         self.middle_line_position = self.data_json["middle_line_position"]["value"]
+        self.middle_thickness = self.data_json["middle_thickness"]["value"]
         self.hsv_hue_bottom = self.data_json["hsv_hue_bottom"]["value"]
         self.hsv_hue_top = self.data_json["hsv_hue_top"]["value"]
         self.hsv_saturation_bottom = self.data_json["hsv_saturation_bottom"]["value"]
@@ -724,7 +747,7 @@ class AngleDetector:
         return [left_angle, right_angle], colour_image3, prev_frame
 
     def save_to_csv(
-        self, input_array, save, dir="test/", name=time.strftime("dem-%Y%m%d-%H%M%S")
+        self, input_array, save, dir="test", name=time.strftime("dem-%Y%m%d-%H%M%S")
     ):
         if save == True:
             csv_name = dir + name + ".csv"
@@ -797,7 +820,7 @@ class AngleDetector:
 
     def repose_calculation_from_video(self, path):
         global current_frame
-        dir = "data/"
+        dir = "data/exp"
         angle_array_full = []
         mode = 0
         try:
@@ -1047,6 +1070,8 @@ class AngleDetector:
         self.data_json["right_boundary"]["value"] = self.right_boundary
 
         self.data_json["middle_line_position"]["value"] = self.middle_line_position
+        self.data_json["middle_thickness"]["value"] = self.middle_thickness
+
         self.data_json["hsv_hue_bottom"]["value"] = self.hsv_hue_bottom
         self.data_json["hsv_hue_top"]["value"] = self.hsv_hue_top
         self.data_json["hsv_saturation_bottom"]["value"] = self.hsv_saturation_bottom
