@@ -242,16 +242,20 @@ class App(customtkinter.CTk):
         self.progress_bars = {}
 
         self.file_path = "./img/piv/piv2.png"
+        self.file_paths = tuple(
+            "./img/piv/piv2.png",
+        )
 
         self.action_buttons_commands = [
             self.next_frame,
             self.process_video,
             self.jump_to_frame,
             self.refresh_image,
+            self.process_multiple_files,
         ]
 
         self.menu_buttons_commands = [
-            self.select_file,
+            self.select_files,
             self.save_file,
             self.load_config,
             self.save_config,
@@ -462,6 +466,15 @@ class App(customtkinter.CTk):
         # print("EEEEEEEEEEEEE", self.widgets)
         # self.CVapp.top_boundary = 120
 
+    def process_multiple_files(self):
+        selected_files = self.select_files()
+        print(selected_files)
+        for file_path in selected_files:
+            print(file_path)
+            self.set_mode(file_path)
+            self.process_video()
+            time.sleep(1)
+
     def update_frames(self):
         if self.video_mode:
             cap = cv2.VideoCapture(self.file_path)
@@ -480,6 +493,40 @@ class App(customtkinter.CTk):
         else:
             self.frame_1 = cv2.imread(self.file_path)
 
+    def select_files(self):
+        filetypes = (
+            ("All files", "*.*"),
+            ("png", "*.png"),
+            ("tiff", "*.tiff"),
+            ("mp4", "*.mp4"),
+            ("avi", "*.avi"),
+        )
+
+        file_paths = tkinter.filedialog.askopenfilenames(
+            title="Open files",
+            initialdir="C:/Users/adamk/Downloads/OneDrive_1_09-01-2024/",
+            filetypes=filetypes,
+        )
+
+        return file_paths
+
+    def set_mode(self, file_path):
+        if file_path.endswith("mp4") or file_path.endswith("avi"):
+            self.video_mode = True
+            self.video_source = file_path
+            self.file_name = file_path.split("/")[-1].split(".")[0]
+            self.vid = MyVideoCapture(self.video_source)
+            self.update_params()
+            print("Video mode!")
+        else:
+            self.video_mode = False
+            self.video_source = None
+            self.frame_1 = cv2.imread(file_path)
+            self.update_params()
+
+        # self.total_array = []
+        self.title(f"Slope Finder ({file_path})")
+
     def select_file(self):
         filetypes = (
             ("All files", "*.*"),
@@ -489,9 +536,12 @@ class App(customtkinter.CTk):
             ("avi", "*.avi"),
         )
 
-        self.file_path = tkinter.filedialog.askopenfilename(
-            title="Open a file", initialdir="./vids", filetypes=filetypes
+        self.file_paths = tkinter.filedialog.askopenfilename(
+            title="Open a file",
+            initialdir="C:/Users/adamk/Downloads/OneDrive_1_09-01-2024/",
+            filetypes=filetypes,
         )
+
         if self.file_path.endswith("mp4") or self.file_path.endswith("avi"):
             self.video_mode = True
             self.video_source = self.file_path
@@ -504,7 +554,7 @@ class App(customtkinter.CTk):
             self.video_source = None
             self.frame_1 = cv2.imread(self.file_path)
             self.update_params()
-        self.total_array = []
+        # self.total_array = []
         self.title(f"Slope Finder ({self.file_path})")
 
     def image_resize(self, image, width=None, height=None, inter=cv2.INTER_AREA):
@@ -597,7 +647,9 @@ class App(customtkinter.CTk):
         # self.video_mode:
         # self.video_mode = True
 
-        self.pause_vid = not self.pause_vid
+        # self.pause_vid = not self.pause_vid
+        self.pause_vid = False
+        self.total_array = []
         while not self.pause_vid:
             ret, frame = self.vid.get_next_frame()
             if not ret:
@@ -618,7 +670,7 @@ class App(customtkinter.CTk):
         self.CVapp.save_to_csv(
             self.total_array,
             True,
-            dir="data/2023/",
+            dir="data/2024/",
             name=str(self.file_name),
         )
 

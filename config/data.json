@@ -2,11 +2,11 @@
     "bottom_boundary": {
         "text": "bottom_boundary",
         "int": 1,
-        "max": 1000,
+        "max": 699,
         "min": 0,
-        "step": 1000,
+        "step": 699,
         "tab": 2,
-        "value": 519,
+        "value": 442,
         "type": "slider"
     },
     "current_image_mode": {
@@ -26,7 +26,7 @@
         "min": 0,
         "step": 500,
         "tab": 1,
-        "value": 52,
+        "value": 202,
         "type": "slider"
     },
     "hsv_hue_bottom": {
@@ -46,7 +46,7 @@
         "min": 0,
         "step": 255,
         "tab": 1,
-        "value": 130,
+        "value": 255,
         "type": "slider"
     },
     "hsv_saturation_bottom": {
@@ -66,7 +66,7 @@
         "min": 0,
         "step": 255,
         "tab": 1,
-        "value": 255,
+        "value": 24,
         "type": "slider"
     },
     "hsv_value_bottom": {
@@ -76,7 +76,7 @@
         "min": 0,
         "step": 255,
         "tab": 1,
-        "value": 0,
+        "value": 214,
         "type": "slider"
     },
     "hsv_value_top": {
@@ -102,11 +102,11 @@
     "left_boundary": {
         "text": "left_boundary",
         "int": 1,
-        "max": 1200,
+        "max": 1059,
         "min": 0,
-        "step": 1200,
+        "step": 1059,
         "tab": 2,
-        "value": 295,
+        "value": 275,
         "type": "slider"
     },
     "low_threshold": {
@@ -116,7 +116,7 @@
         "min": 0,
         "step": 500,
         "tab": 1,
-        "value": 10,
+        "value": 48,
         "type": "slider"
     },
     "max_line_gap": {
@@ -132,11 +132,21 @@
     "middle_line_position": {
         "text": "middle_line_position",
         "int": 1,
-        "max": 1200,
+        "max": 1059,
         "min": 0,
-        "step": 1200,
+        "step": 1059,
         "tab": 2,
-        "value": 619,
+        "value": 528,
+        "type": "slider"
+    },
+    "middle_thickness": {
+        "text": "middle_thickness",
+        "int": 1,
+        "max": 1080,
+        "min": 0,
+        "step": 1080,
+        "tab": 2,
+        "value": 43,
         "type": "slider"
     },
     "min_line_length": {
@@ -162,11 +172,11 @@
     "right_boundary": {
         "text": "right_boundary",
         "int": 1,
-        "max": 1200,
+        "max": 1059,
         "min": 0,
-        "step": 1200,
+        "step": 1059,
         "tab": 2,
-        "value": 930,
+        "value": 787,
         "type": "slider"
     },
     "scale_percent": {
@@ -202,11 +212,11 @@
     "top_boundary": {
         "text": "top_boundary",
         "int": 1,
-        "max": 1000,
+        "max": 699,
         "min": 0,
-        "step": 1000,
+        "step": 699,
         "tab": 2,
-        "value": 339,
+        "value": 168,
         "type": "slider"
     },
     "line_visibility": {
@@ -246,7 +256,7 @@
         "min": 0,
         "step": 3,
         "tab": 0,
-        "value": "0",
+        "value": 0,
         "type": "slider"
     },
     "open_file": {
@@ -329,8 +339,28 @@
         "value": "0",
         "type": "action_button"
     },
+    "process_multiple_files": {
+        "text": "MTPL",
+        "int": 0,
+        "max": 0,
+        "min": 0,
+        "step": 0,
+        "tab": 10,
+        "value": "0",
+        "type": "action_button"
+    },
     "percent_label": {
-        "text": "1/1",
+        "text": "Frame: 1/1(100%)",
+        "int": 0,
+        "max": 0,
+        "min": 0,
+        "step": 0,
+        "tab": 11,
+        "value": "0",
+        "type": "display_label"
+    },
+    "angle_label": {
+        "text": "Angles: 0\u00b0-0\u00b0 (avg: 0\u00b0, \u03c3: 0\u00b0)",
         "int": 0,
         "max": 0,
         "min": 0,
